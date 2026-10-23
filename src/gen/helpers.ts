@@ -1,5 +1,12 @@
 import { readFileSync } from 'node:fs';
-import { EntityId, EntityMap, EntityPrototype } from './prototypes';
+import {
+  EntityId,
+  EntityMap,
+  EntityPrototype,
+  MicrowaveMealRecipe,
+  StackId,
+  StackMap,
+} from './prototypes';
 
 /**
  * Synchronously reads a file as a string, assuming its contents are UTF-8,
@@ -42,6 +49,31 @@ function* parents(
     }
   }
   // Otherwise, nothing
+}
+
+export function* recipeSolids(
+  recipe: MicrowaveMealRecipe,
+  stacks: StackMap,
+  anyRecipeHasStacks: boolean
+): Generator<[EntityId, number]> {
+  if (recipe.solids) {
+    for (const [id, qty] of Object.entries(recipe.solids)) {
+      const stack = !anyRecipeHasStacks && stacks.get(id as StackId);
+      if (stack) {
+        yield [stack.spawn, qty];
+      } else {
+        yield [id as EntityId, qty];
+      }
+    }
+  }
+  if (recipe.stacks) {
+    for (const [id, qty] of Object.entries(recipe.stacks)) {
+      const stack = stacks.get(id as StackId);
+      if (stack) {
+        yield [stack.spawn, qty];
+      }
+    }
+  }
 }
 
 export interface MapToObjectFn {

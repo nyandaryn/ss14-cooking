@@ -2,6 +2,7 @@ import { OneOrMoreEntities } from '../types';
 import { EntitySpawnEntry, Solution } from './components';
 import { DefaultRecipeGroup, MixerCategoryToStepType } from './constants';
 import { ConstructRecipeBuilder } from './construct-recipe-builder';
+import { recipeSolids } from './helpers';
 import {
   ConstructionGraphMap,
   EntityId,
@@ -41,6 +42,7 @@ export interface PrunedGameData {
   readonly foodSequenceStartPoints: ReadonlyMap<TagId, readonly EntityId[]>;
   readonly foodSequenceElements: ReadonlyMap<TagId, readonly EntityId[]>;
   readonly foodSequenceEndPoints: ReadonlyMap<TagId, readonly EntityId[]>;
+  readonly stacks: StackMap;
 }
 
 export interface FilterParams {
@@ -172,6 +174,7 @@ export const filterRelevantPrototypes = (
     foodSequenceStartPoints: foodSequences.startPoints,
     foodSequenceElements: foodSequences.elements,
     foodSequenceEndPoints: foodSequences.endPoints,
+    stacks: raw.stacks,
   };
 };
 
@@ -183,21 +186,19 @@ const collectMicrowaveRecipes = (
   ignoredRecipes: ReadonlySet<string>
 ): MicrowaveMealRecipe[] => {
   const relevantRecipes = allRecipes.filter(r => !ignoredRecipes.has(r.id));
+
+  // If any recipe has a `stacks`, then we must *not* try to resolve solids
+  // as stack IDs. Otherwise, `solids` keys may be stack or entity IDs.
+  const anyRecipeHasStacks = relevantRecipes.some(r => r.stacks != null);
+
   for (const recipe of relevantRecipes) {
     if (ignoredRecipes.has(recipe.id)) {
       continue;
     }
     usedEntities.add(recipe.result);
 
-    if (recipe.solids) {
-      for (const id of Object.keys(recipe.solids)) {
-        const stack = stacks.get(id as StackId);
-        if (stack) {
-          usedEntities.add(stack.spawn);
-        } else {
-          usedEntities.add(id as EntityId);
-        }
-      }
+    for (const [id] of recipeSolids(recipe, stacks, anyRecipeHasStacks)) {
+      usedEntities.add(id);
     }
 
     if (recipe.reagents) {

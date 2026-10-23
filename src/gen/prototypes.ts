@@ -68,8 +68,19 @@ export interface MicrowaveMealRecipe extends PlainObject {
   readonly name: string;
   readonly result: EntityId;
   readonly time?: number;
-  // Don't assume solids will always be set
+  /**
+   * This field is typed as being keyed by an entity prototype ID, but in
+   * reality most forks allow a stack prototype ID as the key as well.
+   *
+   * Caveat: if any recipe in the game has a `stacks` field, then this field
+   * always contains an entity prototype ID, and only `stacks` contains stacks.
+   */
   readonly solids?: Record<EntityId, number>;
+  /**
+   * Solid ingredients matched by stack prototype ID. The cookbook shows the
+   * stack prototype's `spawn` entity as the ingredient.
+   */
+  readonly stacks?: Record<StackId, number>;
   readonly reagents?: Record<ReagentId, number>;
   readonly group?: string;
   /** Frontier */
