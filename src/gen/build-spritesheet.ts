@@ -1,6 +1,7 @@
 import { Jimp, JimpInstance, cssColorToHex } from 'jimp';
 import { existsSync, readFileSync } from 'node:fs';
 import { join as joinPath, resolve } from 'node:path';
+import sharp from 'sharp';
 import { CookingMethod, SpriteAttribution, SpritePoint } from '../types';
 import { ColorWhite } from './constants';
 import { readFileTextWithoutTheStupidBOM } from './helpers';
@@ -389,7 +390,13 @@ class SpriteCache {
     // of 4.
     const MagicErrorMessage = 'unrecognised content at end of stream';
 
-    let buffer = readFileSync(fullPath);
+    let buffer: Buffer = readFileSync(fullPath);
+    if (!isPngSignature(buffer)) {
+      // Some forks ship images in other formats (e.g. WebP) under a .png name.
+      // The game decodes them fine, Jimp doesn't, so convert them first.
+      console.log(`${fullPath}: not a PNG, converting`);
+      buffer = await sharp(buffer).png().toBuffer();
+    }
     let bytesStripped = 0;
     for (;;) {
       // This is so dumb.
@@ -464,3 +471,9 @@ class SpriteCache {
     return attribution;
   }
 }
+
+const PngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+const isPngSignature = (buffer: Buffer): boolean =>
+  buffer.length >= PngSignature.length &&
+  buffer.subarray(0, PngSignature.length).equals(PngSignature);

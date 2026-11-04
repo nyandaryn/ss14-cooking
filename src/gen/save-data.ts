@@ -21,12 +21,17 @@ import { mapToObject } from './helpers';
 import { EntityId, TagId } from './prototypes';
 import { ResolvedGameData } from './resolve-prototypes';
 import { ResolvedSpecials } from './resolve-specials';
-import { MicrowaveRecipeTypes, ResolvedEntity } from './types';
+import {
+  LocalizedNames,
+  LocalizedString,
+  MicrowaveRecipeTypes,
+  ResolvedEntity,
+} from './types';
 
 export interface ProcessedGameData {
   readonly id: string;
-  readonly name: string;
-  readonly description: string;
+  readonly name: LocalizedString;
+  readonly description: LocalizedString;
   readonly default: boolean;
   readonly hidden?: boolean;
   readonly resolved: ResolvedGameData;
@@ -56,89 +61,96 @@ export const saveData = async (
   const now = Date.now();
   const index: ForkData[] = [];
   for (const d of dataWithSpriteHash) {
-    const entities: Entity[] = [];
+    const langs = Array.from(d.resolved.names.keys());
+    const fallbackLang = langs[0];
+    const hashes: Record<string, string> = {};
+    for (const [lang, names] of d.resolved.names) {
+      const entities: Entity[] = [];
 
-    for (const [id, entity] of d.resolved.entities) {
-      entities.push({
-        id,
-        name: entity.name,
-        sprite: d.sprites.points.get(id)!,
-        traits: getSpecialsMask(entity, d.specials),
-        ...getFoodSequenceData(entity, d.foodSequenceStartPoints),
-      });
-    }
-
-    const reagents: Reagent[] = [];
-    for (const [id, reagent] of d.resolved.reagents) {
-      reagents.push({
-        id,
-        name: reagent.name,
-        color: reagent.color,
-        sources: d.resolved.reagentSources.get(id) ?? [],
-      });
-    }
-
-    const ingredients = new Set<string>();
-
-    const recipes: Recipe[] = [];
-    for (const [id, recipe] of d.resolved.recipes) {
-      recipes.push({ id, ...recipe });
-
-      for (const solid of Object.keys(recipe.solids)) {
-        ingredients.add(solid);
+      for (const [id, entity] of d.resolved.entities) {
+        entities.push({
+          id,
+          name: names.entities.get(id) ?? entity.name,
+          sprite: d.sprites.points.get(id)!,
+          traits: getSpecialsMask(entity, d.specials),
+          ...getFoodSequenceData(entity, d.foodSequenceStartPoints),
+        });
       }
+
+      const reagents: Reagent[] = [];
+      for (const [id, reagent] of d.resolved.reagents) {
+        reagents.push({
+          id,
+          name: names.reagents.get(id) ?? reagent.name,
+          color: reagent.color,
+          sources: d.resolved.reagentSources.get(id) ?? [],
+        });
+      }
+
+      const ingredients = new Set<string>();
+
+      const recipes: Recipe[] = [];
+      for (const [id, recipe] of d.resolved.recipes) {
+        recipes.push({ id, ...recipe });
+
+        for (const solid of Object.keys(recipe.solids)) {
+          ingredients.add(solid);
+        }
+      }
+
+      const finalData: GameData = {
+        entities,
+        reagents,
+        ingredients: Array.from(ingredients),
+        recipes,
+        foodSequenceStartPoints: mapToObject(d.foodSequenceStartPoints),
+        foodSequenceElements: mapToObject(d.foodSequenceElements),
+        foodSequenceEndPoints: mapToObject(d.foodSequenceEndPoints),
+
+        methodSprites: mapToObject(d.sprites.methods),
+        beakerFill: d.sprites.beakerFillPoint,
+        microwaveRecipeTypes:
+          d.microwaveRecipeTypes &&
+          d.sprites.microwaveRecipeTypes
+            ? mapToObject(d.sprites.microwaveRecipeTypes, (sprite, subtype) => {
+              const def = d.microwaveRecipeTypes![subtype];
+              return {
+                sprite,
+                verb: localize(def.verb, lang, fallbackLang),
+                filterSummary: localize(def.filterSummary, lang, fallbackLang),
+              };
+            })
+            : null,
+        spriteSheet: SpriteSheetFileName(d.id, d.spriteHash),
+        sortingIdRewrites: d.sortingIdRewrites,
+
+        specialTraits: d.specials.map(s => ({
+          mask: s.mask,
+          hint: localize(s.hint, lang, fallbackLang),
+          color: s.color,
+          filterName: localize(s.filterName, lang, fallbackLang),
+          filterSummary: localize(s.filterSummary, lang, fallbackLang),
+        })),
+        groupNames: mapToObject(names.groups),
+        attributions: d.sprites.attributions,
+      };
+      const json = JSON.stringify(finalData);
+      const hash = getDataHash(json);
+      const path = resolve(dir, GameDataPath(d.id, lang, hash));
+      if (!existsSync(path)) {
+        console.log(`Create: ${path}`);
+      }
+      writeFileSync(path, json, {
+        encoding: 'utf-8',
+      });
+      hashes[lang] = hash;
     }
-
-    const finalData: GameData = {
-      entities,
-      reagents,
-      ingredients: Array.from(ingredients),
-      recipes,
-      foodSequenceStartPoints: mapToObject(d.foodSequenceStartPoints),
-      foodSequenceElements: mapToObject(d.foodSequenceElements),
-      foodSequenceEndPoints: mapToObject(d.foodSequenceEndPoints),
-
-      methodSprites: mapToObject(d.sprites.methods),
-      beakerFill: d.sprites.beakerFillPoint,
-      microwaveRecipeTypes:
-        d.microwaveRecipeTypes &&
-        d.sprites.microwaveRecipeTypes
-          ? mapToObject(d.sprites.microwaveRecipeTypes, (sprite, subtype) => {
-            const def = d.microwaveRecipeTypes![subtype];
-            return {
-              sprite,
-              verb: def.verb,
-              filterSummary: def.filterSummary,
-            };
-          })
-          : null,
-      spriteSheet: SpriteSheetFileName(d.id, d.spriteHash),
-      sortingIdRewrites: d.sortingIdRewrites,
-
-      specialTraits: d.specials.map(s => ({
-        mask: s.mask,
-        hint: s.hint,
-        color: s.color,
-        filterName: s.filterName,
-        filterSummary: s.filterSummary,
-      })),
-      attributions: d.sprites.attributions,
-    };
-    const json = JSON.stringify(finalData);
-    const hash = getDataHash(json);
-    const path = resolve(dir, GameDataPath(d.id, hash));
-    if (!existsSync(path)) {
-      console.log(`Create: ${path}`);
-    }
-    writeFileSync(path, json, {
-      encoding: 'utf-8',
-    });
 
     index.push({
       id: d.id,
-      hash,
-      name: d.name,
-      description: d.description,
+      hashes,
+      name: localizeAll(d.name, langs),
+      description: localizeAll(d.description, langs),
       default: d.default,
       hidden: d.hidden || undefined,
       meta: {
@@ -229,4 +241,30 @@ const getDataHash = (data: string | Buffer): string => {
   hash.update(data);
   const hex = hash.digest('hex');
   return hex.slice(0, 8);
+};
+
+const localize = (
+  value: LocalizedString,
+  lang: string,
+  fallbackLang: string
+): string => {
+  if (typeof value === 'string') {
+    return value;
+  }
+  const text = value[lang] ?? value[fallbackLang] ?? Object.values(value)[0];
+  if (text == null) {
+    throw new Error(`Localized string has no values: ${JSON.stringify(value)}`);
+  }
+  return text;
+};
+
+const localizeAll = (
+  value: LocalizedString,
+  langs: readonly string[]
+): Record<string, string> => {
+  const result: Record<string, string> = {};
+  for (const lang of langs) {
+    result[lang] = localize(value, lang, langs[0]);
+  }
+  return result;
 };

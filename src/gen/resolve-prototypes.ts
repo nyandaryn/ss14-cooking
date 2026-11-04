@@ -20,6 +20,8 @@ import {
 } from './prototypes';
 import { getReagentResult, getSolidResult } from './reaction-helpers';
 import {
+  ForkLocales,
+  LocalizedNames,
   MethodEntities,
   MicrowaveRecipeTypes,
   ResolvedEntity,
@@ -37,19 +39,30 @@ export interface ResolvedGameData {
   readonly methodEntities: ReadonlyMap<CookingMethod, ResolvedEntity>;
   /** Frontier */
   readonly microwaveRecipeTypeEntities: ReadonlyMap<string, ResolvedEntity> | undefined;
+  /**
+   * Display names per site language. The iteration order matches the fork's
+   * `locales` config; the first language is the fallback.
+   */
+  readonly names: ReadonlyMap<string, LocalizedNames>;
 }
 
 export const resolvePrototypes = (
   filtered: PrunedGameData,
   allEntities: ResolvedEntityMap,
-  localeDir: string,
+  localeRoot: string,
+  locales: ForkLocales,
   methodEntities: MethodEntities,
   microwaveRecipeTypes: MicrowaveRecipeTypes | undefined
 ): ResolvedGameData => {
   const reagents = new Map<ReagentId, ResolvedReagent>();
   const recipes = new Map<string, ResolvedRecipe>();
 
-  const fluentBundle = createFluentBundle(localeDir);
+  const bundles = new Map<string, FluentBundle>();
+  for (const [lang, gameLocale] of Object.entries(locales)) {
+    bundles.set(lang, createFluentBundle(resolve(localeRoot, gameLocale), gameLocale));
+  }
+  // The first locale is the fallback for everything else.
+  const fluentBundle = bundles.values().next().value!;
 
   const defaultMicrowaveRecipeType = microwaveRecipeTypes &&
     Object.entries(microwaveRecipeTypes)
@@ -86,14 +99,27 @@ export const resolvePrototypes = (
   }
 
   for (const reagent of filtered.reagents.values()) {
-    const nameMessage = fluentBundle.getMessage(reagent.name);
-    const name = nameMessage?.value
-      ? fluentBundle.formatPattern(nameMessage.value)
-      : reagent.id;
+    const name = formatMessage(fluentBundle, reagent.name) ?? reagent.id;
     reagents.set(reagent.id, {
       name,
       color: reagent.color ?? '#ffffff',
     });
+  }
+
+  const recipeGroups = new Set<string>();
+  for (const recipe of recipes.values()) {
+    recipeGroups.add(recipe.group);
+  }
+
+  const names = new Map<string, LocalizedNames>();
+  for (const [lang, bundle] of bundles) {
+    names.set(lang, resolveNames(
+      bundle,
+      fluentBundle,
+      filtered.entities,
+      filtered.reagents.values(),
+      recipeGroups
+    ));
   }
 
   const resolvedMethodEntities = new Map<CookingMethod, ResolvedEntity>();
@@ -126,6 +152,75 @@ export const resolvePrototypes = (
     reagentSources: filtered.reagentSources,
     methodEntities: resolvedMethodEntities,
     microwaveRecipeTypeEntities,
+    names,
+  };
+};
+
+/**
+ * Formats a Fluent message (or `message.attribute`) from the bundle, returning
+ * null if the message does not exist or fails to format.
+ */
+const formatMessage = (
+  bundle: FluentBundle,
+  id: string | undefined
+): string | null => {
+  if (!id) {
+    return null;
+  }
+  const message = bundle.getMessage(id);
+  if (!message?.value) {
+    return null;
+  }
+  const errors: Error[] = [];
+  const text = bundle.formatPattern(message.value, null, errors).trim();
+  if (errors.length > 0 || text === '') {
+    return null;
+  }
+  return text;
+};
+
+/**
+ * Resolves display names the same way the game does: entity names come from
+ * `ent-<ID>` in the locale (falling back to the prototype's `name`), reagent
+ * names from the reagent's `name` key, and recipe group names from the
+ * guidebook's `guide-entry-<group>-recipes` entries.
+ */
+const resolveNames = (
+  bundle: FluentBundle,
+  fallbackBundle: FluentBundle,
+  entities: ResolvedEntityMap,
+  reagents: Iterable<{ readonly id: ReagentId; readonly name: string }>,
+  groups: ReadonlySet<string>
+): LocalizedNames => {
+  const tryBoth = (id: string): string | null =>
+    formatMessage(bundle, id) ?? formatMessage(fallbackBundle, id);
+
+  const entityNames = new Map<EntityId, string>();
+  for (const [id, entity] of entities) {
+    entityNames.set(id, tryBoth(`ent-${id}`) ?? entity.name);
+  }
+
+  const reagentNames = new Map<ReagentId, string>();
+  for (const reagent of reagents) {
+    reagentNames.set(reagent.id, tryBoth(reagent.name) ?? reagent.id);
+  }
+
+  const groupNames = new Map<string, string>();
+  for (const group of groups) {
+    const key = group.toLowerCase();
+    const name =
+      tryBoth(`guide-entry-${key}-recipes`) ??
+      // "Breads" -> "guide-entry-bread-recipes"
+      (key.endsWith('s') ? tryBoth(`guide-entry-${key.slice(0, -1)}-recipes`) : null) ??
+      // "BarsAndCookies" -> "Bars And Cookies"
+      group.replace(/([a-z])([A-Z])/g, '$1 $2');
+    groupNames.set(group, name);
+  }
+
+  return {
+    entities: entityNames,
+    reagents: reagentNames,
+    groups: groupNames,
   };
 };
 
@@ -147,18 +242,27 @@ const resolveRecipeSubtype = (
   return subtype ?? defaultSubtype;
 };
 
-const createFluentBundle = (localeDir: string): FluentBundle => {
+const createFluentBundle = (
+  localeDir: string,
+  gameLocale: string
+): FluentBundle => {
   const ftlPaths =
-    globSync('*/**/*.ftl', { cwd: localeDir })
-      .map(filePath => resolve(localeDir, filePath))
+    globSync('**/*.ftl', { cwd: localeDir })
+      .sort()
+      .map(filePath => resolve(localeDir, filePath));
+  if (ftlPaths.length === 0) {
+    throw new Error(`No .ftl files found in ${localeDir}`);
+  }
 
-  const bundle = new FluentBundle('en-US', {
+  const bundle = new FluentBundle(gameLocale, {
     useIsolating: false,
   });
 
   for (const path of ftlPaths) {
     const source = readFileTextWithoutTheStupidBOM(path);
     const resource = new FluentResource(source);
+    // Duplicate IDs: the first definition wins (paths are sorted, so this is
+    // deterministic).
     bundle.addResource(resource);
   }
 

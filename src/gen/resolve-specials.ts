@@ -1,13 +1,19 @@
-import { ResolvedEntity, SpecialDiet, SpecialReagent } from './types';
+import {
+  BaselineComparison,
+  LocalizedString,
+  ResolvedEntity,
+  SpecialDiet,
+  SpecialReagent,
+} from './types';
 
 export type ResolvedSpecials = readonly Special[];
 
 export interface Special {
   readonly mask: number;
-  readonly hint: string;
+  readonly hint: LocalizedString;
   readonly color: string;
-  readonly filterName: string;
-  readonly filterSummary: string;
+  readonly filterName: LocalizedString;
+  readonly filterSummary: LocalizedString;
   readonly entityMatches: (ent: ResolvedEntity) => boolean;
 }
 
@@ -19,9 +25,12 @@ const MAX_COUNT = 31;
 export const resolveSpecials = (
   allEntities: ReadonlyMap<string, ResolvedEntity>,
   diets: readonly SpecialDiet[],
-  reagents: readonly SpecialReagent[]
+  reagents: readonly SpecialReagent[],
+  baseline: (BaselineComparison & {
+    readonly extraEntities: ReadonlySet<string>;
+  }) | null = null
 ): ResolvedSpecials => {
-  const totalCount = diets.length + reagents.length;
+  const totalCount = diets.length + reagents.length + (baseline ? 1 : 0);
   if (totalCount >= MAX_COUNT) {
     throw new Error(
       `Can't have more than ${
@@ -74,6 +83,18 @@ export const resolveSpecials = (
       filterName: reagent.filterName,
       filterSummary: reagent.filterSummary,
       entityMatches: ent => ent.reagents.has(reagent.id),
+    });
+  }
+
+  if (baseline) {
+    const mask = 1 << result.length;
+    result.push({
+      mask,
+      hint: baseline.hint,
+      color: baseline.color,
+      filterName: baseline.filterName,
+      filterSummary: baseline.filterSummary,
+      entityMatches: ent => baseline.extraEntities.has(ent.id),
     });
   }
 

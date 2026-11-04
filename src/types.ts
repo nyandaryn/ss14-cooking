@@ -1,8 +1,11 @@
 export interface ForkData {
   readonly id: string;
-  readonly hash: string;
-  readonly name: string;
-  readonly description: string;
+  /** Data file hash per site language (e.g. `en`, `ru`). */
+  readonly hashes: Readonly<Record<string, string>>;
+  /** Fork name per site language. */
+  readonly name: Readonly<Record<string, string>>;
+  /** Fork description per site language. */
+  readonly description: Readonly<Record<string, string>>;
   readonly default: boolean;
   readonly hidden?: true;
   readonly meta: MetaData;
@@ -39,6 +42,9 @@ export interface GameData {
   readonly sortingIdRewrites: Readonly<Record<string, string>>;
 
   readonly specialTraits: Trait[];
+
+  /** Localized display names of recipe groups, keyed by group ID. */
+  readonly groupNames: Readonly<Record<string, string>>;
 
   readonly attributions: readonly SpriteAttribution[];
 }

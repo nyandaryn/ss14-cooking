@@ -15,6 +15,18 @@ import {
 
 export type MethodEntities = Readonly<Record<Recipe['method'], EntityId | null>>;
 
+/**
+ * A string in the fork config that can be translated. Either a plain string
+ * (used for every language), or a map from site language code to string.
+ */
+export type LocalizedString = string | Readonly<Record<string, string>>;
+
+/**
+ * Maps site language codes (e.g. `en`, `ru`) to game locale directory names
+ * (e.g. `en-US`, `ru-RU`). The first entry is the fallback language.
+ */
+export type ForkLocales = Readonly<Record<string, string>>;
+
 /** Frontier */
 export type MicrowaveRecipeTypes = Readonly<Record<string, MicrowaveRecipeTypeData>>;
 
@@ -22,19 +34,24 @@ export type MicrowaveRecipeTypes = Readonly<Record<string, MicrowaveRecipeTypeDa
 export interface MicrowaveRecipeTypeData {
   readonly default?: boolean;
   readonly machine: EntityId;
-  readonly verb: string;
-  readonly filterSummary: string;
+  /**
+   * If true, recipes that can only be made in this machine are sorted after
+   * everything else in the default order. Useful for non-food machines.
+   */
+  readonly sortLast?: boolean;
+  readonly verb: LocalizedString;
+  readonly filterSummary: LocalizedString;
 }
 
 interface SpecialCommon {
   /** The CSS color used for the marker. */
   readonly color: string;
   /** A short hint text shown when hovering over the marker. */
-  readonly hint: string;
+  readonly hint: LocalizedString;
   /** The name of the toggle button in the recipe filter. */
-  readonly filterName: string;
+  readonly filterName: LocalizedString;
   /** A short description shown in the filter summary if no recipe matches. */
-  readonly filterSummary: string;
+  readonly filterSummary: LocalizedString;
 }
 
 export interface SpecialDiet extends SpecialCommon {
@@ -50,6 +67,15 @@ export interface SpecialDiet extends SpecialCommon {
    * Impstation.
    */
   readonly excludeFoodsWith?: readonly ReagentId[];
+}
+
+/**
+ * Marks recipe results that don't exist in a baseline (upstream) repository,
+ * e.g. recipes a fork adds on top of vanilla WizDen.
+ */
+export interface BaselineComparison extends SpecialCommon {
+  /** Path to a local clone of the baseline repo (only Resources/Prototypes is read). */
+  readonly path: string;
 }
 
 export interface SpecialReagent extends SpecialCommon {
@@ -236,6 +262,13 @@ export interface ResolvedReagent {
   // The ID is in the owning collection.
   readonly name: string;
   readonly color: string;
+}
+
+/** Localized display names for a single site language. */
+export interface LocalizedNames {
+  readonly entities: ReadonlyMap<EntityId, string>;
+  readonly reagents: ReadonlyMap<ReagentId, string>;
+  readonly groups: ReadonlyMap<string, string>;
 }
 
 export type ResolvedRecipe =

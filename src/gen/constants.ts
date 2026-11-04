@@ -49,8 +49,8 @@ export const MixerCategoryToStepType: ReadonlyMap<string, SimpleInteractionStep[
   ['Shake', 'shake'],
 ]);
 
-export const GameDataPath = (id: string, hash: string) =>
-  `public/data/data_${id}.${hash}.json`;
+export const GameDataPath = (id: string, lang: string, hash: string) =>
+  `public/data/data_${id}.${lang}.${hash}.json`;
 
 export const ForkListPath = 'public/data/index.json';
 

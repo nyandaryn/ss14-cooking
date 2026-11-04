@@ -9,10 +9,13 @@ import { filterRelevantPrototypes } from './filter-relevant';
 import { EntityId, MicrowaveMealRecipeId, ReagentId } from './prototypes';
 import { findResourceFiles, readRawGameData } from './read-raw';
 import { resolveComponents } from './resolve-components';
-import { resolvePrototypes } from './resolve-prototypes';
+import { ResolvedGameData, resolvePrototypes } from './resolve-prototypes';
 import { resolveSpecials } from './resolve-specials';
 import { ProcessedGameData, saveData } from './save-data';
 import {
+  BaselineComparison,
+  ForkLocales,
+  LocalizedString,
   MethodEntities,
   MicrowaveRecipeTypes,
   ResolvedEntity,
@@ -21,14 +24,22 @@ import {
 } from './types';
 
 interface ForkInfo {
-  readonly name: string;
-  readonly description: string;
+  readonly name: LocalizedString;
+  readonly description: LocalizedString;
+  /**
+   * Site languages to generate data for, mapped to the game's locale folder.
+   * The first entry is the fallback language.
+   * Optional. Default value: { en: en-US }
+   */
+  readonly locales?: ForkLocales;
   readonly hidden?: boolean;
   readonly path: string;
   readonly repo: string;
   readonly default?: boolean;
   readonly specialDiets?: SpecialDiet[];
   readonly specialReagents?: SpecialReagent[];
+  /** Highlight recipe results that are missing from a baseline repo. */
+  readonly baseline?: BaselineComparison;
   readonly methodEntities: MethodEntities;
   readonly mixFillState: string;
   /** Frontier */
@@ -43,11 +54,13 @@ interface ForkInfo {
 }
 
 const PrototypesSubPath = './Resources/Prototypes';
-const LocaleSubPath = './Resources/Locale/en-US';
+const LocaleSubPath = './Resources/Locale';
+const DefaultLocales: ForkLocales = { en: 'en-US' };
 const TexturesSubPath = './Resources/Textures';
 
 const buildFork = async (id: string, fork: ForkInfo): Promise<ProcessedGameData> => {
-  console.log(`Starting work on fork ${id}: ${fork.name}...`);
+  console.log(`Starting work on fork ${id}...`);
+  const locales = fork.locales ?? DefaultLocales;
 
   const commitHash = await getGitCommitHash(fork.path);
   console.log('Generating data from commit:', commitHash);
@@ -99,6 +112,7 @@ const buildFork = async (id: string, fork: ForkInfo): Promise<ProcessedGameData>
     filtered,
     entities,
     resolve(fork.path, LocaleSubPath),
+    locales,
     fork.methodEntities,
     fork.microwaveRecipeTypes
   );
@@ -112,10 +126,18 @@ const buildFork = async (id: string, fork: ForkInfo): Promise<ProcessedGameData>
     } recipes`
   );
 
+  const baseline = fork.baseline
+    ? {
+      ...fork.baseline,
+      extraEntities: findExtraResults(resolved, fork.baseline.path),
+    }
+    : null;
+
   const specials = resolveSpecials(
     entities,
     fork.specialDiets ?? [],
-    fork.specialReagents ?? []
+    fork.specialReagents ?? [],
+    baseline
   );
   console.log(`Resolved ${specials.length} special diets and reagents`);
 
@@ -123,6 +145,7 @@ const buildFork = async (id: string, fork: ForkInfo): Promise<ProcessedGameData>
     fork.sortingIdRewrites ?? [],
     resolved.entities
   );
+  addSortLastRewrites(sortingIdRewrites, resolved, fork.microwaveRecipeTypes);
 
   const spriteSheet = await buildSpriteSheet(
     resolved,
@@ -169,6 +192,105 @@ const readRewrites = (
 
     return result;
   }, {} as Record<string, string>);
+
+/**
+ * Finds recipe results (entities) that the baseline repo can't make: either
+ * the entity doesn't exist there, or none of the recipes that make it do.
+ * Recipes are matched by prototype ID (microwave recipes, reactions); recipes
+ * derived from entity components (cutting, heating, etc.) by their result.
+ */
+const findExtraResults = (
+  resolved: ResolvedGameData,
+  baselinePath: string
+): Set<string> => {
+  const yamlPaths = findResourceFiles(resolve(baselinePath, PrototypesSubPath));
+  const raw = readRawGameData(yamlPaths);
+  const baseRecipes = new Set<string>(raw.recipes.map(r => r.id));
+  const baseReactions = new Set<string>(raw.reactions.map(r => r.id));
+  console.log(
+    `Baseline: ${raw.entities.size} entities, ${
+      baseRecipes.size
+    } microwave recipes, ${baseReactions.size} reactions`
+  );
+
+  // result entity -> can the baseline make it in at least one of these ways?
+  const makeableInBaseline = new Map<string, boolean>();
+  for (const [id, recipe] of resolved.recipes) {
+    const result = recipe.solidResult;
+    if (!result) {
+      continue;
+    }
+    let inBaseline: boolean;
+    if (!raw.entities.has(result)) {
+      inBaseline = false;
+    } else if (recipe.method === 'microwave') {
+      inBaseline = baseRecipes.has(id);
+    } else if (id.startsWith('r!')) {
+      // Reaction recipes: `r!<ReactionId>` or `r!<ReactionId>:<step>`.
+      inBaseline = baseReactions.has(id.slice(2).split(':')[0]);
+    } else {
+      // Derived from the entity's components; the entity exists upstream.
+      inBaseline = true;
+    }
+    makeableInBaseline.set(
+      result,
+      (makeableInBaseline.get(result) ?? false) || inBaseline
+    );
+  }
+
+  const extra = new Set<string>();
+  for (const [entityId, inBaseline] of makeableInBaseline) {
+    if (!inBaseline) {
+      extra.add(entityId);
+    }
+  }
+  console.log(`Found ${extra.size} recipe results not in the baseline`);
+  return extra;
+};
+
+/**
+ * Pushes results of recipes made only in `sortLast` machines to the end of the
+ * default sort order. An entity that can also be made some other way keeps its
+ * normal position.
+ */
+const addSortLastRewrites = (
+  rewrites: Record<string, string>,
+  resolved: ResolvedGameData,
+  microwaveRecipeTypes: MicrowaveRecipeTypes | undefined
+): void => {
+  if (!microwaveRecipeTypes) {
+    return;
+  }
+  const sortLastTypes = new Set(
+    Object.entries(microwaveRecipeTypes)
+      .filter(([, def]) => def.sortLast)
+      .map(([type]) => type)
+  );
+  if (sortLastTypes.size === 0) {
+    return;
+  }
+
+  const onlyInSortLast = new Map<string, boolean>();
+  for (const recipe of resolved.recipes.values()) {
+    const result = recipe.solidResult;
+    if (!result) {
+      continue;
+    }
+    const subtypes =
+      recipe.method === 'microwave' && recipe.subtype != null
+        ? (Array.isArray(recipe.subtype) ? recipe.subtype : [recipe.subtype])
+        : [];
+    const isSortLast =
+      subtypes.length > 0 && subtypes.every(t => sortLastTypes.has(t));
+    onlyInSortLast.set(result, (onlyInSortLast.get(result) ?? true) && isSortLast);
+  }
+
+  for (const [entityId, sortLast] of onlyInSortLast) {
+    if (sortLast) {
+      rewrites[entityId] = `zzz~${rewrites[entityId] ?? entityId}`;
+    }
+  }
+};
 
 const readYamlFile = (path: string): unknown => {
   const source = readFileSync(path, 'utf-8');
