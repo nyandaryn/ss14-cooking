@@ -17,7 +17,7 @@ npm run gen:recipes      # сгенерировать public/data/* по sources
 
 Готовый сайт — это статика из `public/`. Для локальной разработки: `npm run watch` и `npm start` (http://localhost:5514).
 
-Обновить рецепты после изменений в lust-station: `npm run update`.
+Обновить рецепты после изменений в lust-station: `npm run update`. Старые файлы `public/data/data_*.json` и `sprites_*.webp` при этом не удаляются (так задумано в оригинале).
 
 ## Деплой (Cloudflare Pages)
 
@@ -29,7 +29,7 @@ npm run gen:recipes      # сгенерировать public/data/* по sources
 npx wrangler login --scopes account:read user:read workers:write workers_kv:write workers_routes:write workers_scripts:write pages:write offline_access   # один раз
 npm run update           # свежие рецепты + сборка
 npm run deploy           # залить public/ в Cloudflare Pages
-``` Старые файлы `public/data/data_*.json` и `sprites_*.webp` при этом не удаляются (так задумано в оригинале).
+```
 
 ## Что изменено относительно оригинала
 
