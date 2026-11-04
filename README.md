@@ -1,3 +1,45 @@
+# Кулинарная книга SS14: Lust Station
+
+Форк [SS14 Cookbook](https://github.com/arimah/ss14-cookbook) (сайт [ss14.recipes](https://ss14.recipes)): рецепты еды для SS14 на сборке WizDen, с переключением языка (русский/английский).
+
+- Рецепты, названия предметов и реагентов, названия групп рецептов и спрайты берутся из [makura-games/lust-station](https://github.com/makura-games/lust-station). Русские названия читаются из `Resources/Locale/ru-RU` (`ent-<ID>`, `reagent-name-*`, `guide-entry-*-recipes`), английские — из `en-US`, как в игре.
+- Рецепты, которых нет в ванильном WizDen ([space-wizards/space-station-14](https://github.com/space-wizards/space-station-14)), помечаются меткой «Нет в WizDen», и по ней есть фильтр.
+- Язык интерфейса переключается кнопками EN/RU в шапке и в настройках. Без сохранённого выбора язык берётся из браузера.
+
+## Как собрать
+
+```bash
+npm ci
+npm run sources:update   # скачать/обновить lust-station и wizden в ./sources (sparse, ~260 МБ)
+npm run build            # фронтенд + генератор (продовые настройки берутся из .env)
+npm run gen:recipes      # сгенерировать public/data/* по sources.yml
+```
+
+Готовый сайт — это статика из `public/`. Для локальной разработки: `npm run watch` и `npm start` (http://localhost:5514).
+
+Обновить рецепты после изменений в lust-station: `npm run update`.
+
+## Деплой (Cloudflare)
+
+Сайт выложен на https://ss14-cooking.ss14-cookbook.workers.dev — это Cloudflare Workers со статическими файлами (так теперь устроены Cloudflare Pages). Кода на сервере нет, конфиг — `wrangler.jsonc`: раздаётся `public/`, а неизвестные адреса вроде `/menu` отдают `index.html`. Запросы к статике у Cloudflare бесплатные и не ограничены.
+
+```bash
+npx wrangler login       # один раз
+npm run update           # свежие рецепты + сборка
+npm run deploy           # залить public/ в Cloudflare
+``` Старые файлы `public/data/data_*.json` и `sprites_*.webp` при этом не удаляются (так задумано в оригинале).
+
+## Что изменено относительно оригинала
+
+- **Генератор** (`src/gen`): в `sources.yml` у форка есть `locales` (язык сайта → папка локали игры). На каждый язык пишется свой файл данных `data_<fork>.<lang>.<hash>.json`. Строки конфига (`verb`, `hint`, `filterName`, `filterSummary`, `name`, `description`) можно задавать как `{ en: …, ru: … }`. Новые опции: `baseline` (сравнение с WizDen) и `sortLast` (мед-о-мат уходит в конец списка). Исправлено чтение спрайтов, которые на самом деле WebP, но с расширением `.png`.
+- **Фронтенд** (`src/web`): модуль `src/web/i18n` (словари `messages/*.ts`, `useT()`, `useLang()`, склонения через `pluralRu`). Сортировка учитывает язык, поиск не различает «е» и «ё».
+
+## Лицензия
+
+AGPL-3.0, как и у оригинала. Если сайт выложен публично, его исходники должны быть доступны пользователям: укажите адрес своего репозитория в `COOKBOOK_REPO_URL` в `.env`. Ссылка на него стоит в футере.
+
+---
+
 # SS14 Cookbook
 
 This is the source code for the [SS14 Cookbook](https://ss14.recipes). You are free to fork it, clone it, set up your own cookbook and make changes. This source code is released under the terms of the [**AGPLv3**](./LICENSE.txt).

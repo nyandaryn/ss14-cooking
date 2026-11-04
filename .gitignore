@@ -6,8 +6,14 @@ public/index.html
 public/assets/*.css
 public/assets/*.js
 public/data/*.json
+!public/data/notices.json
 public/data/sprites*.webp
 
-privacy.html
-sources.yml
+# This fork commits its sources.yml and privacy.html.
 .env
+
+# Local game source checkouts
+/sources/
+
+# Wrangler local state
+.wrangler/

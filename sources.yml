@@ -1,0 +1,102 @@
+lust:
+  name: "Lust Station"
+  description:
+    en: "WizDen-based build with extra recipes from Lust Station."
+    ru: "Сборка на базе WizDen с дополнительными рецептами Lust Station."
+  # Site language -> game locale folder (Resources/Locale/<folder>).
+  # The first one is the fallback when a translation is missing.
+  locales:
+    en: en-US
+    ru: ru-RU
+  path: "./sources/lust-station"
+  repo: "makura-games/lust-station"
+  default: true
+  methodEntities:
+    microwave: KitchenMicrowave
+    mix: LargeBeaker
+    cut: KitchenKnife
+    roll: RollingPin
+    heat: KitchenElectricGrill
+    heatMixture: ChemistryHotplate
+    stir: Spoon
+    shake: DrinkShaker
+    construct: ClothingHeadHatChef
+    deepFry: null
+  mixFillState: beakerlarge4
+  microwaveRecipeTypes:
+    Microwave:
+      default: true
+      machine: KitchenMicrowave
+      verb: { en: "Microwave", ru: "Микроволновка" }
+      filterSummary: { en: "microwave", ru: "для микроволновки" }
+    MedicalAssembler:
+      machine: MedicalAssembler
+      # Not food: keep medipens out of the way at the end of the list.
+      sortLast: true
+      verb: { en: "Med-O-Mat", ru: "Мед-о-мат" }
+      filterSummary: { en: "med-o-mat", ru: "для мед-о-мата" }
+  specialDiets:
+    - organ: OrganReptilianStomach
+      color: "#2e6b2e"
+      hint: { en: "Reptilians can eat this food.", ru: "Эту еду могут есть унатхи." }
+      filterName: { en: "Reptilian-edible", ru: "Для унатхов" }
+      filterSummary: { en: "reptilian-edible", ru: "подходящих унатхам" }
+    - organ: OrganMothStomach
+      color: "#e3c7aa"
+      hint: { en: "Moths can eat this food.", ru: "Эту еду могут есть нианы." }
+      filterName: { en: "Moth-edible", ru: "Для нианов" }
+      filterSummary: { en: "moth-edible", ru: "подходящих нианам" }
+  specialReagents:
+    - id: Theobromine
+      color: "#b9643b"
+      hint: { en: "This food contains theobromine, poisonous to some species.", ru: "Содержит теобромин — он ядовит для некоторых рас." }
+      filterName: { en: "Contains Theobromine", ru: "С теобромином" }
+      filterSummary: { en: "theobromine-containing", ru: "с теобромином" }
+  # Mark recipes that vanilla WizDen doesn't have.
+  baseline:
+    path: "./sources/wizden"
+    color: "#d4559c"
+    hint: { en: "Not in vanilla WizDen: added by Lust Station.", ru: "Нет в оригинальном WizDen: добавлено в Lust Station." }
+    filterName: { en: "Not in WizDen", ru: "Нет в WizDen" }
+    filterSummary: { en: "Lust Station-only", ru: "уникальных для Lust Station" }
+  sortingIdRewrites:
+    - "rewrites_base.yml"
+  ignoredSpecialRecipes:
+    - heat!FoodEggChickenFertilized
+    - heat!FoodEggDuckFertilized
+  ignoredFoodSequenceElements:
+    - FoodExtradimensionalOrange
+    - MobMouseDead
+    - MobMouse1
+    - MobMouse2
+    - MobMouseCancer
+    - MobMouseAdmeme
+    - FoodFakeCapfruit
+    - OrganDionaBrain
+    - OrganDionaBrainNymph
+    - OrganHumanBrain
+    - SentientSlimeCore
+    - SentientSlimesCore
+  ignoreSourcesOf:
+    - Blood
+    - Nutriment
+    - Vitamin
+    - Water
+    - Chlorine
+    - Gold
+    - Nothing
+    - Saline
+    - UncookedAnimalProteins
+    - Wine
+  forceIncludeReagentSources:
+    Egg: [FoodEgg]
+    Butter: [FoodButter, FoodButterSlice, FoodCannabisButter]
+    THC: [FoodCannabisButter]
+  spriteOffsets:
+    KitchenElectricGrill: [0, 5]
+    ChemistryHotplate: [0, 5]
+    FoodBurgerSuper: [0, 5]
+    FoodBurgerBig: [0, 4]
+    FoodAloe: [0, -4]
+    AloeCream: [0, -2]
+    DrinkShaker: [0, 3]
