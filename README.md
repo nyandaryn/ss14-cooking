@@ -19,14 +19,16 @@ npm run gen:recipes      # сгенерировать public/data/* по sources
 
 Обновить рецепты после изменений в lust-station: `npm run update`.
 
-## Деплой (Cloudflare)
+## Деплой (Cloudflare Pages)
 
-Сайт выложен на https://ss14-cooking.ss14-cookbook.workers.dev — это Cloudflare Workers со статическими файлами (так теперь устроены Cloudflare Pages). Кода на сервере нет, конфиг — `wrangler.jsonc`: раздаётся `public/`, а неизвестные адреса вроде `/menu` отдают `index.html`. Запросы к статике у Cloudflare бесплатные и не ограничены.
+Сайт: https://ss14-cooking.pages.dev — проект Cloudflare Pages `ss14-cooking` с прямой загрузкой файлов (без сборки на стороне Cloudflare). Конфиг — `wrangler.jsonc` (`pages_build_output_dir: ./public`). Верхнеуровневого `404.html` нет, поэтому Pages на любые адреса вроде `/menu` отдаёт `index.html`. Запросы к статике у Cloudflare бесплатные и не ограничены.
+
+Для `wrangler login` нужно право `pages:write`, а свежий wrangler по умолчанию его не запрашивает:
 
 ```bash
-npx wrangler login       # один раз
+npx wrangler login --scopes account:read user:read workers:write workers_kv:write workers_routes:write workers_scripts:write pages:write offline_access   # один раз
 npm run update           # свежие рецепты + сборка
-npm run deploy           # залить public/ в Cloudflare
+npm run deploy           # залить public/ в Cloudflare Pages
 ``` Старые файлы `public/data/data_*.json` и `sprites_*.webp` при этом не удаляются (так задумано в оригинале).
 
 ## Что изменено относительно оригинала

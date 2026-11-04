@@ -6,7 +6,7 @@
     "sources:update": "bash scripts/update-sources.sh",
     "gen:recipes": "node ./bin/recipe-gen.js sources.yml",
     "update": "npm run sources:update && npm run build && npm run gen:recipes",
-    "deploy": "npx -y wrangler@4 deploy",
+    "deploy": "npx -y wrangler@4 pages deploy --branch main",
     "diff:recipes": "node ./bin/recipe-diff.js",
     "watch": "env-cmd -f .env.development -- rollup -c --watch",
     "start": "http-server --port 5514 --proxy http://localhost:5514/index.html?",

@@ -1,13 +1,9 @@
-// Cloudflare deploy config: the site is plain static files from ./public,
-// served by Workers static assets (the current form of Cloudflare Pages).
+// Cloudflare Pages config: the site is plain static files from ./public.
+// Pages serves index.html for unknown paths (/menu, /combinations, ...)
+// because there is no top-level 404.html.
 // Deploy: npm run deploy
 {
   "name": "ss14-cooking",
-  "compatibility_date": "2026-11-03",
-  "assets": {
-    "directory": "./public",
-    // Client-side routes like /menu or /combinations get index.html.
-    "not_found_handling": "single-page-application"
-  },
-  "workers_dev": true
+  "pages_build_output_dir": "./public",
+  "compatibility_date": "2026-11-03"
 }
