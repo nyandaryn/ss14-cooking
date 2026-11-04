@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import { App } from './app';
 import { FetchError } from './fetch-error';
+import { LangProvider, useT } from './i18n';
 import './index.css';
 import { AppRoutes } from './routes';
 import { SettingsProvider } from './settings';
@@ -13,7 +14,8 @@ const IndexPath = `${BASE_PATH}/data/index.json`;
 const ForkListLoader = (): ReactElement => {
   // This is a pretty bad implementation.
   // TODO: Maybe move things to a ForkListContext or something.
-  const [children, setChildren] = useState<ReactNode>('Loading...');
+  const t = useT();
+  const [children, setChildren] = useState<ReactNode>(null);
 
   useEffect(() => {
     fetch(IndexPath, { cache: 'reload' })
@@ -32,24 +34,27 @@ const ForkListLoader = (): ReactElement => {
         },
         err => {
           console.error('Error loading fork list:', err);
-          setChildren(
-            <FetchError
-              message='Something went wrong when loading the list of forks.'
-            />
-          );
+          setChildren(<ForkListError/>);
         }
       );
   }, []);
 
-  return (
-    <SettingsProvider>
-      {children}
-    </SettingsProvider>
-  );
+  return <>{children ?? t.common.loading}</>;
+};
+
+const ForkListError = (): ReactElement => {
+  const t = useT();
+  return <FetchError message={t.common.errors.forkList}/>;
 };
 
 // Why do you make it so hard for me to love you, Immer?
 enableMapSet();
 
 const appRoot = document.getElementById('app-root')!;
-createRoot(appRoot).render(<ForkListLoader/>);
+createRoot(appRoot).render(
+  <SettingsProvider>
+    <LangProvider>
+      <ForkListLoader/>
+    </LangProvider>
+  </SettingsProvider>
+);

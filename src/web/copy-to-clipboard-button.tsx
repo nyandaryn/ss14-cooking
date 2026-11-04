@@ -1,4 +1,5 @@
 import { ReactElement, ReactNode, useCallback, useEffect, useState } from 'react';
+import { useT } from './i18n';
 import { Tooltip } from './tooltip';
 import { tryCopyToClipboard } from './helpers';
 import { CopyToClipboardDialog } from './copy-to-clipboard-dialog';
@@ -16,10 +17,11 @@ const CopySuccessTimeout = 2500;
 export const CopyToClipboardButton = ({
   className,
   getContent,
-  successTooltip = 'Copied to clipboard!',
+  successTooltip,
   fallbackDialogTitle,
   children,
 }: CopyToClipboardButtonProps): ReactElement => {
+  const t = useT();
   const [failedContent, setFailedContent] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
 
@@ -45,7 +47,7 @@ export const CopyToClipboardButton = ({
   }, [copySuccess]);
 
   return <>
-    <Tooltip open={copySuccess} text={successTooltip}>
+    <Tooltip open={copySuccess} text={successTooltip ?? t.misc.clipboard.copied}>
       <button className={className} onClick={handleClick}>
         {children}
       </button>

@@ -2,10 +2,12 @@ import { ReactElement, memo, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router';
 import { useGameData } from '../context';
 import { NeutralCollator } from '../helpers';
+import { useT } from '../i18n';
 import { SeqStartPoint } from './start-point';
 
 export const FoodSequences = memo((): ReactElement => {
   const { entityList, entityMap, reagentMap } = useGameData();
+  const t = useT();
 
   const startPoints = useMemo(() => {
     return entityList
@@ -28,7 +30,11 @@ export const FoodSequences = memo((): ReactElement => {
 
   return (
     <main className='foodseq'>
-      <p>Some foods can have items, usually foods, inserted into them &ndash; or, in the case of burger buns, put on them. Hold the ingredient in hand and click the receiver. In some places this system is referred to as <i>food sequences</i>.</p>
+      <p>
+        {t.recipes.foodSeqIntroBefore}
+        <i>{t.recipes.foodSeqIntroTerm}</i>
+        {t.recipes.foodSeqIntroAfter}
+      </p>
 
       <ul className='foodseq_list'>
         {startPoints.map(ent =>

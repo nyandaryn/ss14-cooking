@@ -1,5 +1,6 @@
 import { ReactElement } from 'react';
 import { useFork } from '../fork-context';
+import { pickLocalized, useLang } from '../i18n';
 import { Notice } from '../notices';
 
 export interface MenuWarningProps {
@@ -12,6 +13,7 @@ export const MenuWarning = ({
   unavailableRecipeCount,
 }: MenuWarningProps): ReactElement | null => {
   const { fork: currentFork, allForks } = useFork();
+  const { lang, t } = useLang();
 
   if (menuFork === currentFork && unavailableRecipeCount === 0) {
     return null;
@@ -23,16 +25,15 @@ export const MenuWarning = ({
     <Notice kind='warning'>
       <p>
         {menuFork !== currentFork &&
-          `This menu was made for a different fork (${
-            targetMenuFork?.name ?? 'not available'
-          }). Recipes and ingredients may be different. `}
+          t.menu.warning.differentFork(
+            targetMenuFork
+              ? pickLocalized(targetMenuFork.name, lang)
+              : t.menu.warning.forkNotAvailable
+          )}
         {unavailableRecipeCount
-          ? unavailableRecipeWarning(unavailableRecipeCount)
+          ? t.menu.warning.unavailableRecipes(unavailableRecipeCount)
           : ''}
       </p>
     </Notice>
   );
 };
-
-const unavailableRecipeWarning = (count: number) =>
-  `${count} recipe${count > 1 ? 's are' : ' is'} unavailable.`;

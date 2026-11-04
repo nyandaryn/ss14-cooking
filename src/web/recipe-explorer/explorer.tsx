@@ -14,6 +14,7 @@ import {
 import { useBlocker } from 'react-router';
 import { useGameData } from '../context';
 import { FocusTrap } from '../focus';
+import { useT } from '../i18n';
 import { CloseIcon } from '../icons';
 import { Recipe } from '../recipe';
 import { compareByName } from '../sort';
@@ -42,6 +43,7 @@ export const RecipeExplorer = memo(({
 
   const mainRef = useRef<HTMLElement>(null);
   const recipeRef = useRef<ExploredRecipeHandle>(null);
+  const t = useT();
 
   useEffect(() => {
     const main = mainRef.current!;
@@ -88,13 +90,13 @@ export const RecipeExplorer = memo(({
       <FocusTrap>
         <section
           className='explorer'
-          aria-label='Recipe explorer'
+          aria-label={t.recipes.explorerLabel}
           tabIndex={-1}
           ref={mainRef}
         >
           <ExploredRecipe id={id} ref={recipeRef}/>
 
-          <Tooltip text='Close recipe explorer' placement='left' provideLabel>
+          <Tooltip text={t.recipes.closeExplorer} placement='left' provideLabel>
             <button
               className='explorer_close'
               onClick={() => setRecipe(null)}
@@ -138,6 +140,7 @@ const ExploredRecipe = memo(({
     entityMap,
     reagentMap,
   } = useGameData();
+  const t = useT();
 
   const recipe = recipeMap.get(id);
   if (!recipe) {
@@ -254,7 +257,7 @@ const ExploredRecipe = memo(({
           }
           onClick={() => setActiveSection('madeWith')}
         >
-          <span className='explorer_arrow-label'>Made with</span>
+          <span className='explorer_arrow-label'>{t.recipes.madeWith}</span>
         </div>
         <div
           className={
@@ -281,7 +284,7 @@ const ExploredRecipe = memo(({
           }
           onClick={() => setActiveSection('usedIn')}
         >
-          <span className='explorer_arrow-label'>Used in</span>
+          <span className='explorer_arrow-label'>{t.recipes.usedIn}</span>
         </div>
         <div
           className={

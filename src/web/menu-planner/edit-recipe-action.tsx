@@ -1,4 +1,5 @@
 import { ReactElement } from 'react';
+import { useT } from '../i18n';
 import { AddIcon, RemoveRecipeIcon } from '../icons';
 import { Tooltip } from '../tooltip';
 
@@ -15,14 +16,15 @@ export const RecipeAction = ({
   onAdd,
   onRemove,
 }: Props): ReactElement => {
+  const t = useT();
   return isSelected ? (
-    <Tooltip text='Remove recipe from menu' provideLabel>
+    <Tooltip text={t.menu.selected.removeRecipe} provideLabel>
       <button onClick={() => onRemove?.(id)}>
         <RemoveRecipeIcon/>
       </button>
     </Tooltip>
   ) : (
-    <Tooltip text='Add recipe to menu' provideLabel>
+    <Tooltip text={t.menu.selected.addRecipe} provideLabel>
       <button onClick={() => onAdd?.(id)}>
         <AddIcon/>
       </button>

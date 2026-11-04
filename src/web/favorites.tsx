@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { StarOffIcon, StarOnIcon } from './icons';
 import { FavoritesKey, useStorage } from './storage';
+import { useT } from './i18n';
 import { Tooltip } from './tooltip';
 
 interface FavoriteContext {
@@ -72,13 +73,14 @@ export const FavoriteButton = memo(({
   id,
 }: FavoriteButtonProps): ReactElement => {
   const {isFavorite, toggleFavorite} = useContext(Context);
+  const t = useT();
 
   const isFav = isFavorite(id);
 
   return (
-    <Tooltip text={isFav ? 'Remove from favourites' : 'Mark as favourite'}>
+    <Tooltip text={isFav ? t.misc.favorites.remove : t.misc.favorites.add}>
       <button
-        aria-label='Mark as favourite'
+        aria-label={t.misc.favorites.add}
         aria-pressed={isFav}
         className='fav'
         onClick={() => toggleFavorite(id)}

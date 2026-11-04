@@ -1,6 +1,7 @@
 import { ReactElement, ReactNode, memo, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useGameData } from '../context';
+import { useT } from '../i18n';
 import { AddIcon, EditIcon } from '../icons';
 import { Notice } from '../notices';
 import { Tooltip } from '../tooltip';
@@ -41,6 +42,7 @@ export const MenuList = memo((): ReactElement => {
 
   const storage = useStoredMenus();
   const url = useUrl();
+  const t = useT();
 
   const importParam = query.get('import');
   const importState = useMemo((): ImportState => {
@@ -92,12 +94,12 @@ export const MenuList = memo((): ReactElement => {
   if (allMenus.length === 0) {
     menuList =
       <div className='planner_empty-list'>
-        <h3>No saved menus</h3>
-        <p>A menu is a collection of recipes and ingredients. Plan your food around a theme, gather up your favourite recipes, or just get a list of produce to grow.</p>
+        <h3>{t.menu.list.emptyTitle}</h3>
+        <p>{t.menu.list.emptyText}</p>
         <p>
           <Link to={url.menuNew} className='btn'>
             <AddIcon/>
-            <span>Create your first menu</span>
+            <span>{t.menu.list.createFirst}</span>
           </Link>
         </p>
       </div>;
@@ -111,7 +113,7 @@ export const MenuList = memo((): ReactElement => {
       <div>
         <Link to={url.menuNew} className='btn floating'>
           <AddIcon />
-          <span>Create new menu</span>
+          <span>{t.menu.list.createNew}</span>
         </Link>
       </div>
     </>;
@@ -121,11 +123,9 @@ export const MenuList = memo((): ReactElement => {
     <div className='planner'>
       {importState.type === 'error' && (
         <Notice kind='error'>
-          The page address contains a menu to import, but something went wrong when reading it.
-          {' '}
-          Please make sure you have the <em>entire</em> address.
-          {' '}
-          If it still doesn’t work, please report the error!
+          {t.menu.list.importErrorPrefix}
+          <em>{t.menu.list.importErrorEntire}</em>
+          {t.menu.list.importErrorSuffix}
         </Notice>
       )}
       {menuList}
@@ -149,6 +149,7 @@ interface ItemProps {
 const Item = memo(({ menu }: ItemProps): ReactElement => {
   const { recipeMap, entityMap, reagentMap } = useGameData();
   const url = useUrl();
+  const t = useT();
 
   const recipeSummary = useMemo(() => {
     let recipeNames = menu.recipes
@@ -165,14 +166,14 @@ const Item = memo(({ menu }: ItemProps): ReactElement => {
       const remaining = recipeNames.length - MaxRecipesInSummary + 1;
       recipeNames = recipeNames.slice(0, MaxRecipesInSummary - 1);
       recipeNames = recipeNames.concat(
-        `and ${remaining} more recipes`
+        t.menu.list.andMore(remaining)
       );
     }
     if (recipeNames.length === 0) {
-      recipeNames.push('(No recipes)');
+      recipeNames.push(t.menu.list.noRecipes);
     }
     return recipeNames.join(', ');
-  }, [menu, recipeMap, entityMap, reagentMap]);
+  }, [menu, recipeMap, entityMap, reagentMap, t]);
 
   return (
     <div className='planner_list-menu'>
@@ -180,11 +181,11 @@ const Item = memo(({ menu }: ItemProps): ReactElement => {
         to={url.menuView(menu.id)}
         className='btn planner_view-menu-button'
       >
-        <b>{menu.name.trim() || '(untitled menu)'}</b>
+        <b>{menu.name.trim() || t.menu.untitledMenu}</b>
         {' '}
         <span>{recipeSummary}</span>
       </Link>
-      <Tooltip provideLabel text='Edit menu'>
+      <Tooltip provideLabel text={t.menu.list.editMenu}>
         <Link to={url.menuEdit(menu.id)} className='btn'>
           <EditIcon/>
         </Link>

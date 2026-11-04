@@ -16,6 +16,7 @@ import { Checkbox } from '../checkbox';
 import { useGameData } from '../context';
 import { CopyToClipboardButton } from '../copy-to-clipboard-button';
 import { NeutralCollator } from '../helpers';
+import { useT } from '../i18n';
 import {
   CollapseIcon,
   ExpandIcon,
@@ -40,9 +41,6 @@ import {
   saveFilterToUrl,
 } from './filter';
 
-const HideRarelyUsedTooltip = 'Hides ingredients that are only used in a single recipe. You can still find all ingredients by name.';
-const GroupFilterTooltip = 'These groups are taken from the game data and are not always correct or intuitive. Each recipe belongs to exactly one group.';
-
 export interface Props {
   open: boolean;
   filter: RecipeFilter;
@@ -63,6 +61,7 @@ export const FilterEditor = memo(({
   }, [setFilter]);
 
   const [hideRarelyUsed, setHideRarelyUsed] = useState(true);
+  const t = useT();
 
   return <>
     {open && <div className='recipe-search_filter-wedge'/>}
@@ -89,9 +88,9 @@ export const FilterEditor = memo(({
           checked={hideRarelyUsed}
           onChange={e => setHideRarelyUsed(e.target.checked)}
         >
-          Hide rarely used ingredients
+          {t.recipes.hideRarelyUsed}
         </Checkbox>
-        <Tooltip text={HideRarelyUsedTooltip} provideLabel>
+        <Tooltip text={t.recipes.hideRarelyUsedTooltip} provideLabel>
           <span className='recipe-search_help'>
             <InformationIcon/>
           </span>
@@ -114,6 +113,7 @@ const MethodFilter = memo(({ filter, update }: FilterProps): ReactElement => {
   const { methods, subtypes } = filter;
 
   const { methodSprites, microwaveRecipeTypes } = useGameData();
+  const t = useT();
 
   const microwaveSubtypes = useMemo(() => {
     if (!microwaveRecipeTypes) {
@@ -164,7 +164,7 @@ const MethodFilter = memo(({ filter, update }: FilterProps): ReactElement => {
   }, []);
 
   return <>
-    <span className='recipe-search_label'>Preparation method:</span>
+    <span className='recipe-search_label'>{t.recipes.preparationMethod}</span>
     <ul className='recipe-search_options recipe-search_options--compact'>
       {microwaveSubtypes ? (
         microwaveSubtypes.map(subtype =>
@@ -184,11 +184,14 @@ const MethodFilter = memo(({ filter, update }: FilterProps): ReactElement => {
           selected={methods.includes('microwave')}
           onClick={toggle}
         >
-          <RawSprite position={methodSprites.microwave!} alt='microwave'/>
-          <span>Microwave</span>
+          <RawSprite
+            position={methodSprites.microwave!}
+            alt={t.recipes.methodAlts.microwave}
+          />
+          <span>{t.recipes.methodLabels.microwave}</span>
         </FilterOption>
       )}
-      {SecondaryMethods.map(({method, label, alt}) =>
+      {SecondaryMethods.map(method =>
         methodSprites[method] ? (
           <FilterOption
             key={method}
@@ -196,8 +199,11 @@ const MethodFilter = memo(({ filter, update }: FilterProps): ReactElement => {
             selected={methods.includes(method)}
             onClick={toggle}
           >
-            <RawSprite position={methodSprites[method]} alt={alt}/>
-            <span>{label}</span>
+            <RawSprite
+              position={methodSprites[method]}
+              alt={t.recipes.methodAlts[method]}
+            />
+            <span>{t.recipes.methodLabels[method]}</span>
           </FilterOption>
         ) : null
       )}
@@ -205,19 +211,14 @@ const MethodFilter = memo(({ filter, update }: FilterProps): ReactElement => {
   </>;
 });
 
-interface SecondaryMethod {
-  readonly method: Exclude<DisplayMethod, 'microwave'>;
-  readonly label: string;
-  readonly alt: string;
-}
-
-const SecondaryMethods: readonly SecondaryMethod[] = [
-  { method: 'heat', label: 'Heat', alt: 'grill' },
-  { method: 'deepFry', label: 'Deep fry', alt: 'deep fryer' },
-  { method: 'mix', label: 'Mix', alt: 'beaker' },
-  { method: 'cut', label: 'Cut', alt: 'knife' },
-  { method: 'roll', label: 'Roll', alt: 'rolling pin' },
-  { method: 'construct', label: 'General', alt: '' },
+// Labels and sprite alt texts are in `t.recipes.methodLabels`/`methodAlts`.
+const SecondaryMethods: readonly Exclude<DisplayMethod, 'microwave'>[] = [
+  'heat',
+  'deepFry',
+  'mix',
+  'cut',
+  'roll',
+  'construct',
 ];
 
 interface IngredientProps {
@@ -239,6 +240,7 @@ const IngredientFilter = memo(({
 
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState('');
+  const t = useT();
 
   const sortedIngredients = useMemo(() => {
     let filteredIngredients: string[];
@@ -293,7 +295,7 @@ const IngredientFilter = memo(({
   }, []);
 
   return <>
-    <span className='recipe-search_label'>Solid ingredients:</span>
+    <span className='recipe-search_label'>{t.recipes.solidIngredients}</span>
     <IngredientToolbar
       selectedCount={ingredients.size}
       query={query}
@@ -311,7 +313,7 @@ const IngredientFilter = memo(({
     >
       {sortedIngredients.length === 0 && (
         <li className='recipe-search_no-match'>
-          Couldn’t find any ingredients matching <i>{query}</i>
+          {t.recipes.noIngredientsMatching}<i>{query}</i>
         </li>
       )}
       {sortedIngredients.map(id =>
@@ -343,6 +345,7 @@ const ReagentFilter = memo(({
 
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState('');
+  const t = useT();
 
   const sortedReagents = useMemo(() => {
     let filteredReagents: Reagent[];
@@ -389,7 +392,7 @@ const ReagentFilter = memo(({
   }, []);
 
   return <>
-    <span className='recipe-search_label'>Reagent ingredients:</span>
+    <span className='recipe-search_label'>{t.recipes.reagentIngredients}</span>
     <IngredientToolbar
       selectedCount={reagents.size}
       query={query}
@@ -407,7 +410,7 @@ const ReagentFilter = memo(({
     >
       {sortedReagents.length === 0 && (
         <li className='recipe-search_no-match'>
-          Couldn’t find any reagents matching <i>{query}</i>
+          {t.recipes.noReagentsMatching}<i>{query}</i>
         </li>
       )}
       {sortedReagents.map(reagent =>
@@ -426,6 +429,7 @@ const ReagentFilter = memo(({
 });
 
 const ModeOption = memo(({ filter, update }: FilterProps): ReactElement => {
+  const t = useT();
   const handleChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
     update(draft => {
       draft.ingredientMode = e.target.value as IngredientMode;
@@ -437,7 +441,7 @@ const ModeOption = memo(({ filter, update }: FilterProps): ReactElement => {
       className='recipe-search_label'
       htmlFor='recipe-filter-mode'
     >
-      Show recipes with:
+      {t.recipes.showRecipesWith}
     </label>
     <div className='recipe-search_mode'>
       <select
@@ -445,9 +449,9 @@ const ModeOption = memo(({ filter, update }: FilterProps): ReactElement => {
         value={filter.ingredientMode}
         onChange={handleChange}
       >
-        <option value='all'>All of the selected ingredients</option>
-        <option value='any'>Any of the selected ingredients</option>
-        <option value='only'>Only the selected ingredients</option>
+        <option value='all'>{t.recipes.modeAll}</option>
+        <option value='any'>{t.recipes.modeAny}</option>
+        <option value='only'>{t.recipes.modeOnly}</option>
       </select>
     </div>
   </>;
@@ -457,7 +461,8 @@ const GroupFilter = memo(({
   filter,
   update,
 }: FilterProps): ReactElement | null => {
-  const { recipeGroups } = useGameData();
+  const { recipeGroups, groupNames } = useGameData();
+  const t = useT();
 
   const toggle = useCallback((group: string, newSelected: boolean) => {
     update(draft => {
@@ -477,7 +482,7 @@ const GroupFilter = memo(({
 
   return <>
     <span className='recipe-search_label'>
-      Group:
+      {t.recipes.group}
     </span>
     <ul className='recipe-search_options recipe-search_options--compact'>
       {recipeGroups.map(group =>
@@ -487,11 +492,11 @@ const GroupFilter = memo(({
           value={group}
           onClick={toggle}
         >
-          {group}
+          {groupNames[group] ?? group}
         </FilterOption>
       )}
       <li style={{ alignSelf: 'center' }}>
-        <Tooltip text={GroupFilterTooltip} provideLabel>
+        <Tooltip text={t.recipes.groupTooltip} provideLabel>
           <span className='recipe-search_help'>
             <InformationIcon/>
           </span>
@@ -503,6 +508,7 @@ const GroupFilter = memo(({
 
 const TraitFilter = memo(({ filter, update }: FilterProps): ReactElement => {
   const { specialTraits } = useGameData();
+  const t = useT();
 
   const toggle = useCallback((trait: number) => {
     update(draft => {
@@ -512,7 +518,7 @@ const TraitFilter = memo(({ filter, update }: FilterProps): ReactElement => {
 
   return <>
     <span className='recipe-search_label'>
-      Special property:
+      {t.recipes.specialProperty}
     </span>
     <ul className='recipe-search_options recipe-search_options--compact'>
       {specialTraits.map(trait =>
@@ -576,32 +582,36 @@ const IngredientToolbar = ({
   expanded,
   setExpanded,
   reset,
-}: IngredientToolbarProps): ReactElement =>
-  <span className='recipe-search_opt-filter'>
-    {selectedCount > 0 && <span>{selectedCount} selected</span>}
-    <InputGroup iconBefore={<SearchTextIcon/>}>
-      <input
-        type='search'
-        placeholder='Search ingredients...'
-        size={1}
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-      />
-    </InputGroup>
-    <Tooltip
-      text={expanded ? 'Collapse list' : 'Expand list'}
-      provideLabel
-    >
-      <button onClick={() => setExpanded(x => !x)}>
-        {expanded ? <CollapseIcon/> : <ExpandIcon/>}
-      </button>
-    </Tooltip>
-    <Tooltip text='Clear selected ingredients' provideLabel>
-      <button disabled={selectedCount === 0} onClick={reset}>
-        <ResetIcon/>
-      </button>
-    </Tooltip>
-  </span>;
+}: IngredientToolbarProps): ReactElement => {
+  const t = useT();
+  return (
+    <span className='recipe-search_opt-filter'>
+      {selectedCount > 0 && <span>{t.recipes.selectedCount(selectedCount)}</span>}
+      <InputGroup iconBefore={<SearchTextIcon/>}>
+        <input
+          type='search'
+          placeholder={t.recipes.searchIngredients}
+          size={1}
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+        />
+      </InputGroup>
+      <Tooltip
+        text={expanded ? t.recipes.collapseList : t.recipes.expandList}
+        provideLabel
+      >
+        <button onClick={() => setExpanded(x => !x)}>
+          {expanded ? <CollapseIcon/> : <ExpandIcon/>}
+        </button>
+      </Tooltip>
+      <Tooltip text={t.recipes.clearSelectedIngredients} provideLabel>
+        <button disabled={selectedCount === 0} onClick={reset}>
+          <ResetIcon/>
+        </button>
+      </Tooltip>
+    </span>
+  );
+};
 
 interface FilterExportProps {
   filter: RecipeFilter;
@@ -613,6 +623,7 @@ const FilterExport = ({
   search,
 }: FilterExportProps): ReactElement => {
   const url = useUrl();
+  const t = useT();
 
   const getFilterAndSearch = () => {
     const query = saveFilterToUrl(filter);
@@ -638,29 +649,29 @@ const FilterExport = ({
   return (
     <div className='recipe-search_row recipe-search_row--actions'>
       <LinkIcon/>
-      <span>Copy link to:</span>
+      <span>{t.recipes.copyLinkTo}</span>
       <CopyToClipboardButton
         getContent={getFilterOnly}
-        successTooltip='Link copied to clipboard!'
-        fallbackDialogTitle='Exported filter'
+        successTooltip={t.recipes.linkCopied}
+        fallbackDialogTitle={t.recipes.exportedFilter}
       >
         <FilterIcon/>
-        <span>Filter</span>
+        <span>{t.recipes.linkFilter}</span>
       </CopyToClipboardButton>
       <CopyToClipboardButton
         getContent={getSearchOnly}
-        successTooltip='Link copied to clipboard!'
-        fallbackDialogTitle='Exported search'
+        successTooltip={t.recipes.linkCopied}
+        fallbackDialogTitle={t.recipes.exportedSearch}
       >
         <SearchIcon/>
-        <span>Search</span>
+        <span>{t.recipes.linkSearch}</span>
       </CopyToClipboardButton>
       <CopyToClipboardButton
         getContent={getFilterAndSearch}
-        successTooltip='Link copied to clipboard!'
-        fallbackDialogTitle='Exported filter + search'
+        successTooltip={t.recipes.linkCopied}
+        fallbackDialogTitle={t.recipes.exportedFilterAndSearch}
       >
-        <span>Filter + search</span>
+        <span>{t.recipes.linkFilterAndSearch}</span>
       </CopyToClipboardButton>
     </div>
   );

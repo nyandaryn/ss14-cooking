@@ -1,5 +1,6 @@
 import { ReactElement } from 'react';
 import { Link, useSearchParams } from 'react-router';
+import { useT } from '../i18n';
 import { ArrowRightIcon } from '../icons';
 import { useUrl } from '../url';
 import { ExportSection } from './export-section';
@@ -9,6 +10,7 @@ export const MigratePage = (): ReactElement => {
   const [query] = useSearchParams();
 
   const url = useUrl();
+  const t = useT();
 
   if (query.has('import')) {
     return <ImportSection/>;
@@ -20,20 +22,20 @@ export const MigratePage = (): ReactElement => {
   let children: ReactElement;
   if (!CANONICAL_URL) {
     children = <>
-      <p>The server has no configured address to migrate to.</p>
-      <p>There is nothing further to do here. :)</p>
+      <p>{t.misc.migrate.noTarget}</p>
+      <p>{t.misc.migrate.nothingToDo}</p>
     </>;
   } else {
     const currentUrl = new URL(window.location.href);
     const canonicalUrl = new URL(CANONICAL_URL);
     if (currentUrl.host === canonicalUrl.host) {
-      children = <p>Visit the old address if you want to migrate saved data (menus and favourite recipes).</p>;
+      children = <p>{t.misc.migrate.onCanonical}</p>;
     } else {
       children = <>
-        <p>If you want to migrate your data to the new cookbook, you may do so:</p>
+        <p>{t.misc.migrate.offer}</p>
         <p>
           <Link to={url.migrateExport}>
-            Export saved data <ArrowRightIcon/>
+            {t.misc.migrate.exportLink} <ArrowRightIcon/>
           </Link>
         </p>
       </>;
@@ -43,11 +45,11 @@ export const MigratePage = (): ReactElement => {
   return (
     <main>
       <section className='migrate'>
-        <p>Hey, how did you get here?</p>
+        <p>{t.misc.migrate.howDidYouGetHere}</p>
         {children}
         <p>
           <Link to={url.recipes} replace>
-            Continue to cookbook <ArrowRightIcon/>
+            {t.misc.migrate.continueToCookbook} <ArrowRightIcon/>
           </Link>
         </p>
       </section>

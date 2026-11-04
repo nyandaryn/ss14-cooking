@@ -10,6 +10,7 @@ import { Link } from 'react-router';
 import { Entity, Recipe as RecipeData } from '../../types';
 import { useGameData } from '../context';
 import { FavoriteButton, useIsFavorite } from '../favorites';
+import { useT } from '../i18n';
 import { CloseIcon, FoodSequenceIcon, NodeTreeIcon } from '../icons';
 import { Popup, usePopupTrigger } from '../popup';
 import { useCurrentExploredRecipe, useExploreRecipe } from '../recipe-explorer';
@@ -117,10 +118,6 @@ export const Recipe = memo(({
   );
 });
 
-const FoodSequenceStartTooltip =
-  'You can put other foods inside this one.\n' +
-  'Click to see what can be put inside it.';
-
 const defaultHeaderAction = (
   recipe: RecipeData,
   entities: ReadonlyMap<string, Entity>
@@ -145,9 +142,10 @@ const SeqStartButton = memo(({
   entityId,
 }: SeqStartButtonProps): ReactElement => {
   const url = useUrl();
+  const t = useT();
   // TODO: Maybe use different icons for starts and elements
   return (
-    <Tooltip text={FoodSequenceStartTooltip} provideLabel>
+    <Tooltip text={t.recipes.foodSequenceStartTooltip} provideLabel>
       <Link
         className='btn'
         to={url.foodSequence}
@@ -168,18 +166,19 @@ const SeqElemIcon = memo(({
   seqElem,
   seqEnd,
 }: SeqElemIconProps): ReactElement => {
+  const t = useT();
   const tooltipContent = useMemo(() => (
     <div className='popup_foodseq'>
       {seqElem && <>
-        <p>You can put this food inside:</p>
+        <p>{t.recipes.canPutInside}</p>
         <SeqElemList sequences={seqElem}/>
       </>}
       {seqEnd && <>
-        <p>This food can finish off:</p>
+        <p>{t.recipes.canFinishOff}</p>
         <SeqElemList sequences={seqEnd}/>
       </>}
     </div>
-  ), [seqElem, seqEnd]);
+  ), [seqElem, seqEnd, t]);
 
   const popup = usePopupTrigger<HTMLSpanElement>();
 
@@ -221,6 +220,7 @@ interface ExploreButtonProps {
 const ExploreButton = memo(({ id }: ExploreButtonProps): ReactElement => {
   const explore = useExploreRecipe();
   const currentRecipe = useCurrentExploredRecipe();
+  const t = useT();
 
   const isCurrent = id === currentRecipe;
 
@@ -228,8 +228,8 @@ const ExploreButton = memo(({ id }: ExploreButtonProps): ReactElement => {
     <Tooltip
       text={
         isCurrent
-          ? 'Close recipe explorer'
-          : 'Explore related recipes'
+          ? t.recipes.closeExplorer
+          : t.recipes.exploreRelated
       }
       provideLabel
     >

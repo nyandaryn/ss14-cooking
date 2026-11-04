@@ -1,6 +1,7 @@
 import { ReactElement, memo } from 'react';
 import { Reagent, ReagentIngredient as ReagentIngredientData } from '../../types';
 import { useGameData } from '../context';
+import { useLang } from '../i18n';
 import { Popup, usePopupTrigger } from '../popup';
 import { EntitySprite, ReagentSprite } from '../sprites';
 import { Tooltip } from '../tooltip';
@@ -60,6 +61,7 @@ export const SolidIngredient = ({
   qty,
 }: SolidIngredientProps): ReactElement => {
   const { entityMap, recipesBySolidResult } = useGameData();
+  const { locale, t } = useLang();
   const entity = entityMap.get(id)!;
   const relatedRecipes = recipesBySolidResult.get(id);
 
@@ -67,7 +69,7 @@ export const SolidIngredient = ({
     <span className='recipe_ingredient'>
       <EntitySprite id={id}/>
       <span>
-        {qty != null ? `${qty} ` : null}
+        {qty != null ? t.recipes.solidQty(qty, qty.toLocaleString(locale)) : null}
         {relatedRecipes ? (
           <RecipePopup id={relatedRecipes}>
             <span className='more-info'>
@@ -93,12 +95,15 @@ export const ReagentIngredient = ({
   catalyst = false,
 }: ReagentIngredientProps): ReactElement => {
   const { reagentMap, recipesByReagentResult } = useGameData();
+  const { locale, t } = useLang();
   const reagent = reagentMap.get(id)!;
   const relatedRecipes = recipesByReagentResult.get(id);
 
-  const formattedAmount = typeof amount === 'number'
-    ? `${amount}u `
-    : `${amount[0]}–${amount[1]}u `;
+  const formattedAmount = t.recipes.units(
+    typeof amount === 'number'
+      ? amount.toLocaleString(locale)
+      : `${amount[0].toLocaleString(locale)}–${amount[1].toLocaleString(locale)}`
+  ) + ' ';
 
   return (
     <span className='recipe_ingredient'>
@@ -118,14 +123,10 @@ export const ReagentIngredient = ({
         {catalyst && <>
           {' '}
           <Tooltip
-            text={
-              `You won’t lose any of the ${
-                reagent.name
-              } when making this recipe.`
-            }
+            text={t.recipes.catalystTooltip(reagent.name)}
           >
             <span className='recipe_catalyst'>
-              catalyst
+              {t.recipes.catalyst}
             </span>
           </Tooltip>
         </>}

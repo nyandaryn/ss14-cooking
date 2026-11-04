@@ -2,6 +2,7 @@ import { ReactElement, memo, useMemo } from 'react';
 import { Entity } from '../../types';
 import { useGameData } from '../context';
 import { NeutralCollator } from '../helpers';
+import { useT } from '../i18n';
 import { RecipePopup } from '../recipe';
 import { EntitySprite } from '../sprites';
 
@@ -18,6 +19,7 @@ export const SeqStartPoint = memo(({
     foodSequenceEndPoints,
     entityMap,
   } = useGameData();
+  const t = useT();
 
   const startRecipe = recipesBySolidResult.get(entity.id);
 
@@ -51,14 +53,14 @@ export const SeqStartPoint = memo(({
           </RecipePopup>
         ) : entity.name}
       </strong>
-      {` accepts up to ${seqStart.maxCount} of:`}
+      {t.recipes.foodSeqAccepts(seqStart.maxCount)}
     </p>
     <ul className='foodseq_elements'>
       {elements.map(id => <SeqElement key={id} id={id}/>)}
     </ul>
 
     {endPoints && endPoints.length > 0 && <>
-      <p>and can be finished with one of:</p>
+      <p>{t.recipes.foodSeqFinishedWith}</p>
       <ul className='foodseq_elements'>
         {endPoints.map(id => <SeqElement key={id} id={id}/>)}
       </ul>

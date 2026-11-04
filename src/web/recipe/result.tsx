@@ -1,6 +1,7 @@
 import { ReactElement, memo } from 'react';
 import { Recipe } from '../../types';
 import { useGameData } from '../context';
+import { useLang } from '../i18n';
 import { EntitySprite, ReagentSprite } from '../sprites';
 import { Tooltip } from '../tooltip';
 
@@ -12,6 +13,7 @@ export const RecipeResult = memo(({
   recipe,
 }: RecipeResultProps): ReactElement => {
   const { entityMap, reagentMap } = useGameData();
+  const { locale, t } = useLang();
 
   const solidResult = recipe.solidResult
     ? entityMap.get(recipe.solidResult)
@@ -27,7 +29,7 @@ export const RecipeResult = memo(({
         <EntitySprite id={solidResult.id}/>
         <span className='recipe_name'>{solidResult.name}</span>
         {resultQty > 1 && (
-          <Tooltip text={`This recipe makes ${resultQty}.`}>
+          <Tooltip text={t.recipes.makesQty(resultQty)}>
             <span className='recipe_result-qty'>
               {resultQty}
             </span>
@@ -38,6 +40,7 @@ export const RecipeResult = memo(({
   }
   if (reagentResult) {
     const { id: resultId, name: resultName } = reagentResult;
+    const formattedQty = t.recipes.units(resultQty.toLocaleString(locale));
     return (
       <span className='recipe_result'>
         <ReagentSprite id={resultId}/>
@@ -45,16 +48,10 @@ export const RecipeResult = memo(({
           {resultName}
         </span>
         <Tooltip
-          text={
-            `The recipe makes ${
-              resultQty
-            }u ${
-              resultName
-            } with the amounts shown. You can make larger or smaller batches as long as the ratio stays the same.`
-          }
+          text={t.recipes.reagentResultTooltip(formattedQty, resultName)}
         >
           <span className='recipe_result-qty'>
-            {`${resultQty}u`}
+            {formattedQty}
           </span>
         </Tooltip>
       </span>

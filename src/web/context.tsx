@@ -7,7 +7,7 @@ import {
   useMemo,
 } from 'react';
 import { Entity, GameData, Reagent, Recipe } from '../types';
-import { NeutralCollator } from './helpers';
+import { NeutralCollator, normalizeSearchText } from './helpers';
 import { SearchableRecipeData } from './types';
 
 export interface GameDataProviderProps {
@@ -52,7 +52,7 @@ export const GameDataProvider = memo(({
         name = reagentMap.get(recipe.reagentResult)!.name;
       }
       if (name) {
-        searchableRecipeNames.set(recipe.id, name.toLowerCase());
+        searchableRecipeNames.set(recipe.id, normalizeSearchText(name));
       }
 
       for (const id of Object.keys(recipe.solids)) {
@@ -81,8 +81,12 @@ export const GameDataProvider = memo(({
       recipesByReagentIngredient,
       searchableRecipeNames,
       recipeGroups: Array.from(recipeGroups).sort((a, b) =>
-        NeutralCollator.compare(a, b)
+        NeutralCollator.compare(
+          raw.groupNames[a] ?? a,
+          raw.groupNames[b] ?? b
+        )
       ),
+      groupNames: raw.groupNames,
       ingredients: raw.ingredients,
 
       foodSequenceStartPoints: new Map(

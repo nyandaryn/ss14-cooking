@@ -1,6 +1,7 @@
 import { KeyboardEvent, ReactElement, ReactNode, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { FocusTrap } from '../focus';
+import { useT } from '../i18n';
 import { AddIcon, CloseIcon, ImportIcon } from '../icons';
 import { Overlay } from '../overlay';
 import { getPopupRoot } from '../popup';
@@ -19,6 +20,7 @@ export const ImportMenuDialog = ({
   onCancel,
 }: ImportMenuDialogProps): ReactElement => {
   const { getAll } = useStoredMenus();
+  const t = useT();
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape') {
@@ -66,26 +68,30 @@ export const ImportMenuDialog = ({
           tabIndex={-1}
           onKeyDown={handleKeyDown}
         >
-          <h2>Import menu</h2>
+          <h2>{t.menu.importDialog.title}</h2>
 
           <div className='dialog_body'>
-            <p>It looks like you already have this menu. How would you like to proceed?</p>
+            <p>{t.menu.importDialog.alreadyHave}</p>
             <ul className='menu-import_actions'>
               <li>
                 <ImportAction
-                  title='Create a new menu'
-                  desc={<>The menu will be imported as <i>{newName}</i>.</>}
+                  title={t.menu.importDialog.createNew}
+                  desc={<>
+                    {t.menu.importDialog.createNewDescPrefix}
+                    <i>{newName}</i>
+                    {t.menu.importDialog.createNewDescSuffix}
+                  </>}
                   icon={<AddIcon/>}
                   onClick={handleImportNew}
                 />
               </li>
               <li>
                 <ImportAction
-                  title='Overwrite the existing menu'
+                  title={t.menu.importDialog.overwrite}
                   desc={<>
-                    The existing menu will be completely replaced.
+                    {t.menu.importDialog.overwriteDesc}
                     {' '}
-                    <strong>This cannot be undone.</strong>
+                    <strong>{t.menu.importDialog.cannotUndo}</strong>
                   </>}
                   icon={<ImportIcon/>}
                   onClick={() => onImport(menu)}
@@ -93,8 +99,8 @@ export const ImportMenuDialog = ({
               </li>
               <li>
                 <ImportAction
-                  title='Do nothing'
-                  desc='Close this dialog and don’t import the menu.'
+                  title={t.menu.importDialog.doNothing}
+                  desc={t.menu.importDialog.doNothingDesc}
                   icon={<CloseIcon/>}
                   onClick={onCancel}
                 />

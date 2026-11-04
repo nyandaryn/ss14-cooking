@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
 } from 'react';
+import { DefaultLang, useLang } from '../i18n';
 import { ErrorIcon, InformationIcon, StarOnIcon, WarningIcon } from '../icons';
 import { RecipePopup } from '../recipe';
 import { FirstVisitKey, useStorage } from '../storage';
@@ -28,6 +29,7 @@ export const NoticeList = ({ currentFork }: NoticeListProps): ReactElement => {
   // We need the context here so we can skip rendering dismissed notices
   // altogether. Otherwise the `<Notice>` would take care of that.
   const context = useContext(NoticesContext);
+  const { lang } = useLang();
 
   const storage = useStorage<string>(FirstVisitKey);
   const firstVisit = useMemo(() => storage.read(today), []);
@@ -64,14 +66,30 @@ export const NoticeList = ({ currentFork }: NoticeListProps): ReactElement => {
           icon={notice.icon && Icons[notice.icon]}
           kind={notice.kind}
         >
-          <h3>{notice.title}</h3>
-          {notice.content.map((source, i) =>
+          <h3>{pickNoticeValue<string>(notice.title, lang)}</h3>
+          {pickNoticeValue<readonly string[]>(notice.content, lang).map((source, i) =>
             <p key={i}>{parseContent(source)}</p>
           )}
         </Notice>
       ) : null
     )}
   </>;
+};
+
+/**
+ * Notices in notices.json may be translated: `title` and `content` can be
+ * either the plain value, or an object mapping language codes (`en`, `ru`)
+ * to the value. Falls back to English, then to any available language.
+ */
+const pickNoticeValue = <T extends string | readonly string[]>(
+  value: T | Readonly<Record<string, T>>,
+  lang: string
+): T => {
+  if (typeof value === 'string' || Array.isArray(value)) {
+    return value as T;
+  }
+  const localized = value as Readonly<Record<string, T>>;
+  return localized[lang] ?? localized[DefaultLang] ?? Object.values(localized)[0];
 };
 
 const parseContent = (source: string): ReactNode[] => {

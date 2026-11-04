@@ -1,5 +1,6 @@
 import { ReactElement, ReactNode, useEffect, useState } from 'react';
 import { intersperse } from '../helpers';
+import { useT } from '../i18n';
 import { ArrowRightIcon } from '../icons';
 import { Notice } from '../notices';
 import { AllStorageKeys } from '../storage';
@@ -51,6 +52,7 @@ export const ExportSection = (): ReactElement => {
   const [state, setState] = useState(getInitialState);
 
   const url = useUrl();
+  const t = useT();
   useEffect(() => {
     switch (state.type) {
       case 'loading':
@@ -69,35 +71,43 @@ export const ExportSection = (): ReactElement => {
   switch (state.type) {
     case 'notAvailable':
       children = <>
-        <p>Data exports are not available: no <code>{'CANONICAL_URL'}</code> is configured.</p>
-        <p>If you are the owner of this cookbook, see <code>.env.example</code> for information on how to enable redirects and exports.</p>
+        <p>
+          {t.misc.export.notAvailablePrefix}
+          <code>{'CANONICAL_URL'}</code>
+          {t.misc.export.notAvailableSuffix}
+        </p>
+        <p>
+          {t.misc.export.ownerHintPrefix}
+          <code>.env.example</code>
+          {t.misc.export.ownerHintSuffix}
+        </p>
       </>;
       break;
     case 'alreadyCanonical':
       children = <>
-        <p>You’re already on the correct page!</p>
-        <p>Please visit the old cookbook if you wish to export your data.</p>
+        <p>{t.misc.export.alreadyCanonical}</p>
+        <p>{t.misc.export.visitOld}</p>
       </>;
       break;
     case 'loading':
-      children = <p>Preparing export...</p>;
+      children = <p>{t.misc.export.preparing}</p>;
       break;
     case 'noData':
       children =
         <Notice kind='info'>
-          You don’t appear to have any data to export!
+          {t.misc.export.noData}
         </Notice>;
       break;
     case 'ready':
       children = <>
-        <p>Export ready. Redirecting to the new address...</p>
-        <p>If you don’t get redirected automatically in a few seconds, click here:</p>
+        <p>{t.misc.export.ready}</p>
+        <p>{t.misc.export.notRedirected}</p>
         <p>
           {/* Explicitly no `rel='noreferrer'`: we need the target URL to have
             * a valid referrer.
             */}
           <a href={state.targetUrl}>
-            Continue with export <ArrowRightIcon/>
+            {t.misc.export.continue} <ArrowRightIcon/>
           </a>
         </p>
       </>;
@@ -105,20 +115,20 @@ export const ExportSection = (): ReactElement => {
     case 'error':
       children = <>
         <Notice kind='error'>
-          Something went wrong when preparing your data.
+          {t.misc.export.error}
         </Notice>
         <p>
-          {'The following data could not be exported: '}
+          {t.misc.export.failedKeys}
           {intersperse<ReactNode>(
             state.failedKeys.map(key => <i key={key}>{key}</i>),
             ', '
           )}
         </p>
         {state.targetUrl !== null && <>
-          <p>You can continue manually if you wish:</p>
+          <p>{t.misc.export.continueManually}</p>
           <p>
             <a href={state.targetUrl}>
-              Continue with partial export <ArrowRightIcon/>
+              {t.misc.export.continuePartial} <ArrowRightIcon/>
             </a>
           </p>
         </>}

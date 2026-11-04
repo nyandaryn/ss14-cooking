@@ -1,6 +1,7 @@
 import { cloneElement, ReactElement, Ref, useMemo } from 'react';
 import { Entity } from '../../types';
 import { useGameData } from '../context';
+import { useT } from '../i18n';
 import { Popup, usePopupTrigger } from '../popup';
 import { EntitySprite } from '../sprites';
 import { Recipe } from './recipe';
@@ -52,6 +53,7 @@ export const ReagentInfoPopup = ({
   children,
 }: ReagentInfoPopupProps): ReactElement => {
   const { entityMap } = useGameData();
+  const t = useT();
 
   const popup = usePopupTrigger();
 
@@ -64,12 +66,12 @@ export const ReagentInfoPopup = ({
       {recipes?.map(renderRecipe)}
       {sources.length > 0 && (
         <div className='popup_foodseq'>
-          <p>Common sources:</p>
+          <p>{t.recipes.commonSources}</p>
           {sources.map(id => renderReagentSource(id, entityMap))}
         </div>
       )}
     </div>
-  ), [recipes, sources]);
+  ), [recipes, sources, t]);
 
   return <>
     {childWithRef}

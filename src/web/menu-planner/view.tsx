@@ -8,6 +8,7 @@ import { Link, useParams } from 'react-router';
 import { useGameData } from '../context';
 import { CopyToClipboardButton } from '../copy-to-clipboard-button';
 import { NeutralCollator } from '../helpers';
+import { useT } from '../i18n';
 import { ArrowLeftIcon, EditIcon, ExportIcon } from '../icons';
 import { Notice } from '../notices';
 import { Recipe, RecipePopup } from '../recipe';
@@ -30,6 +31,7 @@ export const MenuViewer = memo((): ReactElement => {
     reagentMap,
   } = useGameData();
   const url = useUrl();
+  const t = useT();
 
   const storage = useStoredMenus();
 
@@ -77,13 +79,13 @@ export const MenuViewer = memo((): ReactElement => {
   const backButton =
     <Link to={url.menuList} className='btn floating'>
       <ArrowLeftIcon/>
-      <span>Back to listing</span>
+      <span>{t.menu.backToListing}</span>
     </Link>;
 
   if (!menu) {
     return (
       <div className='planner_view'>
-        <h2>Menu not found</h2>
+        <h2>{t.menu.notFound}</h2>
         <div className='planner_view-actions'>{backButton}</div>
       </div>
     );
@@ -96,12 +98,12 @@ export const MenuViewer = memo((): ReactElement => {
 
   return (
     <div className='planner_view'>
-      <h2>{menu.name.trim() || '(untitled menu)'}</h2>
+      <h2>{menu.name.trim() || t.menu.untitledMenu}</h2>
       <div className='planner_view-actions'>
         {backButton}
         <Link to={url.menuEdit(id)} className='btn floating'>
           <EditIcon/>
-          <span>Edit</span>
+          <span>{t.menu.view.edit}</span>
         </Link>
 
         <span className='spacer'/>
@@ -109,14 +111,14 @@ export const MenuViewer = memo((): ReactElement => {
         <CopyToClipboardButton
           className='floating'
           getContent={getMenuExport}
-          fallbackDialogTitle='Exported menu'
-          successTooltip='Link copied to clipboard!'
+          fallbackDialogTitle={t.menu.view.exportedMenu}
+          successTooltip={t.menu.view.linkCopied}
         >
           <ExportIcon/>
-          <span>Export</span>
+          <span>{t.menu.view.export}</span>
         </CopyToClipboardButton>
         <Notice kind='info'>
-          Your menu is private. Export to share it with others.
+          {t.menu.view.privateNotice}
         </Notice>
       </div>
 
@@ -126,7 +128,7 @@ export const MenuViewer = memo((): ReactElement => {
       />
 
       {ingredients.length > 0 && <>
-        <h3>Ingredients</h3>
+        <h3>{t.menu.view.ingredients}</h3>
         <ul className='planner_view-ingredients'>
           {ingredients.map(ingredient =>
             <li key={ingredient.id}>
@@ -150,7 +152,7 @@ export const MenuViewer = memo((): ReactElement => {
         </ul>
       </>}
 
-      <h3>Recipes</h3>
+      <h3>{t.menu.view.recipes}</h3>
       <ul className='recipe-list'>
         {menu.recipes.map(id => recipeMap.has(id) ? (
           <li key={id}>

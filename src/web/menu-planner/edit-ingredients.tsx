@@ -1,6 +1,7 @@
 import { ReactElement, memo, useMemo } from 'react';
 import { useGameData } from '../context';
 import { NeutralCollator, dedupe } from '../helpers';
+import { useT } from '../i18n';
 import { AddIcon, EyeIcon, EyeOffIcon, InformationIcon } from '../icons';
 import { Popup, usePopupTrigger } from '../popup';
 import { Recipe } from '../recipe';
@@ -24,6 +25,7 @@ export const IngredientList = memo(({
   onAddRecipe,
 }: Props): ReactElement => {
   const { entityMap, reagentMap } = useGameData();
+  const t = useT();
 
   const sortedIngredients = useMemo(() => {
     return availableIngredients.slice(0).sort((a, b) => {
@@ -37,10 +39,10 @@ export const IngredientList = memo(({
   const precursorIngredients = sortedIngredients.filter(x => x.precursor);
 
   return <>
-    <h3>Recipe ingredients</h3>
+    <h3>{t.menu.ingredients.title}</h3>
     {sortedIngredients.length > 0 ? <>
       <p className='text-subtle'>
-        These ingredients are used by at least one selected recipe.
+        {t.menu.ingredients.description}
       </p>
       <ul className='planner_editor-ingredient-list'>
         {directIngredients.map(ingredient =>
@@ -55,9 +57,9 @@ export const IngredientList = memo(({
       </ul>
 
       {precursorIngredients.length > 0 && <>
-        <h3>Ingredients of ingredients</h3>
+        <h3>{t.menu.ingredients.precursorsTitle}</h3>
         <p className='text-subtle'>
-          These are ingredients for other ingredients, not directly used by any recipe in the menu.
+          {t.menu.ingredients.precursorsDescription}
         </p>
         <ul className='planner_editor-ingredient-list'>
           {precursorIngredients.map(ingredient =>
@@ -72,8 +74,8 @@ export const IngredientList = memo(({
         </ul>
       </>}
     </> : <>
-      <p>When you add recipes to the menu, their ingredients will show up here. This list will also include ingredients used in recipes for other ingredients.</p>
-      <p>You can hide ingredients you don’t want to see, and add their recipes (when available) to your menu.</p>
+      <p>{t.menu.ingredients.emptyText1}</p>
+      <p>{t.menu.ingredients.emptyText2}</p>
     </>}
   </>;
 });
@@ -92,6 +94,7 @@ const Ingredient = memo(({
   onAddRecipe,
 }: IngredientProps): ReactElement => {
   const { recipeMap, entityMap, reagentMap } = useGameData();
+  const t = useT();
 
   const sourceOfText = useMemo(() => {
     if (ingredient.sourceOfReagent.size === 0) {
@@ -102,8 +105,8 @@ const Ingredient = memo(({
       reagentMap.get(id)!.name
     );
     reagentNames.sort((a, b) => NeutralCollator.compare(a, b));
-    return `Source of: ${reagentNames.join(', ')}`;
-  }, [ingredient, reagentMap]);
+    return t.menu.ingredients.sourceOf(reagentNames.join(', '));
+  }, [ingredient, reagentMap, t]);
 
   const usedByText = useMemo(() => {
     if (ingredient.usedBy.size === 0) {
@@ -116,8 +119,8 @@ const Ingredient = memo(({
       )
     );
     recipeNames.sort((a, b) => NeutralCollator.compare(a, b));
-    return `Used by: ${recipeNames.join(', ')}`;
-  }, [ingredient, recipeMap, entityMap, reagentMap]);
+    return t.menu.ingredients.usedBy(recipeNames.join(', '));
+  }, [ingredient, recipeMap, entityMap, reagentMap, t]);
 
   const tooltipText = `${sourceOfText}\n${usedByText}`.trim();
 
@@ -129,10 +132,10 @@ const Ingredient = memo(({
           : 'planner_editor-ingredient'
       }
     >
-      <Tooltip text={visible ? 'Hide this ingredient' : 'Show this ingredient'}>
+      <Tooltip text={visible ? t.menu.ingredients.hide : t.menu.ingredients.show}>
         <button
           className='planner_editor-ingredient-toggle'
-          aria-label='Hide this ingredient'
+          aria-label={t.menu.ingredients.hide}
           aria-pressed={!visible}
           onClick={() => onToggleVisible(ingredient.id)}
         >
@@ -178,12 +181,13 @@ const AddRecipeButton = memo(({
   onAdd,
 }: AddRecipeButtonProps): ReactElement => {
   const popup = usePopupTrigger<HTMLButtonElement>();
+  const t = useT();
 
   const n = index + 1;
 
   const ariaLabel = totalCount > 1
-    ? `Add recipe ${n} for this ingredient to the menu`
-    : 'Add the recipe for this ingredient to the menu';
+    ? t.menu.ingredients.addRecipeN(n)
+    : t.menu.ingredients.addTheRecipe;
 
   return <>
     <button
@@ -199,7 +203,7 @@ const AddRecipeButton = memo(({
       <div className='popup_recipe'>
         <Recipe id={recipeId} canFavorite={false} canExplore={false}/>
         <span className='popup_tooltip'>
-          Add this recipe to the menu.
+          {t.menu.ingredients.addThisRecipe}
         </span>
       </div>
     </Popup>

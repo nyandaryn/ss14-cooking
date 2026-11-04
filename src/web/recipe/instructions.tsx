@@ -12,6 +12,7 @@ import {
   StartStep,
 } from '../../types';
 import { useGameData } from '../context';
+import { useT } from '../i18n';
 import { RawSprite } from '../sprites';
 import { Temperature } from '../temperature';
 import {
@@ -73,26 +74,31 @@ interface StartStepProps {
   step: StartStep;
 }
 
-const StartStep = ({ step }: StartStepProps): ReactElement =>
-  <li className='recipe_step recipe_step--compact'>
-    Take <SolidIngredient id={step.entity}/>
-  </li>;
+const StartStep = ({ step }: StartStepProps): ReactElement => {
+  const t = useT();
+  return (
+    <li className='recipe_step recipe_step--compact'>
+      {t.recipes.stepTake}<SolidIngredient id={step.entity}/>
+    </li>
+  );
+};
 
 interface EndStepProps {
   step: EndStep;
 }
 
 const EndStep = ({ step }: EndStepProps): ReactElement => {
+  const t = useT();
   if (typeof step.entity === 'string') {
     return (
       <li className='recipe_step recipe_step--compact'>
-        Finish with <SolidIngredient id={step.entity}/>
+        {t.recipes.stepFinishWith}<SolidIngredient id={step.entity}/>
       </li>
     );
   } else {
     return (
       <li className='recipe_step recipe_step--add'>
-        <span>Finish with one of:</span>
+        <span>{t.recipes.stepFinishWithOneOf}</span>
         {step.entity.map(id => <SolidIngredient key={id} id={id}/>)}
       </li>
     );
@@ -105,6 +111,7 @@ interface MixStepProps {
 }
 
 const MixStep = ({ step, visible }: MixStepProps): ReactElement => {
+  const t = useT();
   // Slightly more compact view if there's only one ingredient.
   // I really wish JS had a better way of traversing objects.
   const keys = Object.keys(step.reagents);
@@ -113,7 +120,7 @@ const MixStep = ({ step, visible }: MixStepProps): ReactElement => {
     const ingredient = step.reagents[id];
     return (
       <li className='recipe_step recipe_step--compact'>
-        {'Take '}
+        {t.recipes.stepTake}
         <ReagentIngredient
           id={id}
           amount={ingredient.amount}
@@ -124,7 +131,7 @@ const MixStep = ({ step, visible }: MixStepProps): ReactElement => {
   } else {
     return (
       <li className='recipe_step recipe_step--mix'>
-        <div>Mix:</div>
+        <div>{t.recipes.stepMix}</div>
         <RecipeIngredients
           visible={visible}
           reagents={step.reagents}
@@ -140,18 +147,9 @@ interface AddStepProps {
 }
 
 const AddStep = ({ step }: AddStepProps): ReactElement => {
-  let text: string;
-  if (step.minCount) {
-    if (step.maxCount) {
-      text = `Add ${step.minCount} to ${step.maxCount} `;
-    } else {
-      text = `Add ${step.minCount} or more`;
-    }
-  } else if (step.maxCount) {
-    text = `Add up to ${step.maxCount} `;
-  } else {
-    text = `Add `;
-  }
+  const t = useT();
+  const multiple = typeof step.entity !== 'string';
+  const text = t.recipes.stepAdd(step.minCount, step.maxCount, multiple);
 
   // More compact appearance if only one entity matches
   if (typeof step.entity === 'string') {
@@ -161,11 +159,6 @@ const AddStep = ({ step }: AddStepProps): ReactElement => {
       </li>
     );
   } else {
-    if (step.minCount || step.maxCount) {
-      text += ' of any of:';
-    } else {
-      text += ' any of:';
-    }
     return (
       <li className='recipe_step recipe_step--add'>
         <span>{text}</span>
@@ -180,13 +173,14 @@ interface AddReagentStepProps {
 }
 
 const AddReagentStep = ({ step }: AddReagentStepProps): ReactElement => {
+  const t = useT();
   const amount = step.minCount !== step.maxCount
     ? [step.minCount, step.maxCount] as const
     : step.minCount;
 
   return (
     <li className='recipe_step recipe_step--compact'>
-      Add <ReagentIngredient id={step.reagent} amount={amount}/>
+      {t.recipes.stepAddReagent}<ReagentIngredient id={step.reagent} amount={amount}/>
     </li>
   );
 };
@@ -197,10 +191,11 @@ interface HeatStepProps {
 
 const HeatStep = ({ step }: HeatStepProps): ReactElement => {
   const { methodSprites } = useGameData();
+  const t = useT();
   return (
     <li className='recipe_step recipe_step--simple'>
       <RawSprite position={methodSprites.heat!} alt=''/>
-      Heat it to <Temperature k={step.minTemp}/>
+      {t.recipes.stepHeatTo}<Temperature k={step.minTemp}/>
     </li>
   );
 };
@@ -211,14 +206,18 @@ interface HeatMixtureStepProps {
 
 const HeatMixtureStep = ({ step }: HeatMixtureStepProps): ReactElement => {
   const { methodSprites } = useGameData();
+  const t = useT();
   return (
     <li className='recipe_step recipe_step--simple'>
       <RawSprite position={methodSprites.heatMixture!} alt=''/>
       {' '}
       {step.maxTemp != null ? <>
-        Heat it to between <Temperature k={step.minTemp}/> and <Temperature k={step.maxTemp}/>
+        {t.recipes.stepHeatBetween}
+        <Temperature k={step.minTemp}/>
+        {t.recipes.stepHeatBetweenAnd}
+        <Temperature k={step.maxTemp}/>
       </> : <>
-        Heat it to <Temperature k={step.minTemp}/>
+        {t.recipes.stepHeatTo}<Temperature k={step.minTemp}/>
       </>}
     </li>
   );
@@ -230,19 +229,13 @@ interface SimpleStepProps {
 
 const SimpleStep = ({ step }: SimpleStepProps): ReactElement => {
   const { methodSprites } = useGameData();
+  const t = useT();
   return (
     <li className='recipe_step recipe_step--simple'>
       <RawSprite position={methodSprites[step.type]!} alt=''/>
-      {SimpleStepText[step.type]}
+      {t.recipes.stepSimple[step.type]}
     </li>
   );
-};
-
-const SimpleStepText: Readonly<Record<SimpleInteractionStep['type'], string>> = {
-  cut: 'Cut it',
-  roll: 'Roll it',
-  shake: 'Shake it',
-  stir: 'Stir it',
 };
 
 interface AlsoMakesStepProps {
@@ -250,17 +243,18 @@ interface AlsoMakesStepProps {
 }
 
 const AlsoMakesStep = ({ step }: AlsoMakesStepProps): ReactElement => {
+  const t = useT();
   // More compact appearance if there's only one other entity
   if (typeof step.entity === 'string') {
     return (
       <li className='recipe_step recipe_step--compact recipe_step--also'>
-        Also makes <SolidIngredient id={step.entity}/>
+        {t.recipes.stepAlsoMakes}<SolidIngredient id={step.entity}/>
       </li>
     );
   } else {
     return (
       <li className='recipe_step recipe_step--add recipe_step--also'>
-        <span>Also makes:</span>
+        <span>{t.recipes.stepAlsoMakesList}</span>
         {step.entity.map(id => <SolidIngredient key={id} id={id}/>)}
       </li>
     );

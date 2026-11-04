@@ -1,5 +1,6 @@
-import { KeyboardEvent, ReactElement, useCallback } from 'react';
+import { KeyboardEvent, ReactElement, useCallback, useMemo } from 'react';
 import { FocusTrap } from '../focus';
+import { Lang, LangNames, Languages, useLang } from '../i18n';
 import { TemperatureUnitSetting, ThemeSetting, useSettings } from './context';
 import { Option, OptionGroup } from './option-group';
 
@@ -11,6 +12,24 @@ export const SettingsDialog = ({
   onClose,
 }: SettingsDialogProps): ReactElement => {
   const [settings, update] = useSettings();
+  const { lang, setLang, t } = useLang();
+
+  const languageOptions = useMemo<readonly Option<Lang>[]>(() =>
+    Languages.map(l => ({ name: LangNames[l], value: l })),
+  []);
+
+  const themeOptions = useMemo<readonly Option<ThemeSetting>[]>(() => [
+    { name: t.common.settings.themeDark, value: 'dark' },
+    { name: t.common.settings.themeLight, value: 'light' },
+  ], [t]);
+
+  const temperatureUnitOptions = useMemo<
+    readonly Option<TemperatureUnitSetting>[]
+  >(() => [
+    { name: t.common.settings.kelvin, value: 'kelvin' },
+    { name: t.common.settings.celsius, value: 'celsius' },
+    { name: t.common.settings.fahrenheit, value: 'fahrenheit' },
+  ], [t]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (
@@ -42,19 +61,28 @@ export const SettingsDialog = ({
     <FocusTrap onPointerDownOutside={onClose}>
       <div className='settings' tabIndex={-1} onKeyDown={handleKeyDown}>
         <div className='settings_name'>
-          Colour scheme:
+          {t.common.language.label}
         </div>
         <OptionGroup
-          options={ThemeOptions}
+          options={languageOptions}
+          value={lang}
+          onChange={setLang}
+        />
+
+        <div className='settings_name'>
+          {t.common.settings.colorScheme}
+        </div>
+        <OptionGroup
+          options={themeOptions}
           value={settings.theme}
           onChange={handleChangeTheme}
         />
 
         <div className='settings_name'>
-          Temperature unit:
+          {t.common.settings.temperatureUnit}
         </div>
         <OptionGroup
-          options={TemperatureUnitOptions}
+          options={temperatureUnitOptions}
           value={settings.temperatureUnit}
           onChange={handleChangeTemperatureUnit}
         />
@@ -62,29 +90,3 @@ export const SettingsDialog = ({
     </FocusTrap>
   );
 };
-
-const ThemeOptions: readonly Option<ThemeSetting>[] = [
-  {
-    name: 'Dark theme',
-    value: 'dark',
-  },
-  {
-    name: 'Light theme',
-    value: 'light',
-  },
-];
-
-const TemperatureUnitOptions: readonly Option<TemperatureUnitSetting>[] = [
-  {
-    name: 'Kelvin (K)',
-    value: 'kelvin',
-  },
-  {
-    name: 'Celsius (°C)',
-    value: 'celsius',
-  },
-  {
-    name: 'Fahrenheit (°F)',
-    value: 'fahrenheit',
-  },
-];

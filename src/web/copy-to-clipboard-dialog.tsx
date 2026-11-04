@@ -2,6 +2,7 @@ import { KeyboardEvent, ReactElement, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FocusTrap } from './focus';
 import { tryCopyToClipboard } from './helpers';
+import { useT } from './i18n';
 import { CloseIcon, CopyIcon } from './icons';
 import { Overlay } from './overlay';
 import { getPopupRoot } from './popup';
@@ -15,9 +16,10 @@ export interface CopyToClipboardDialogProps {
 
 export const CopyToClipboardDialog = ({
   content,
-  title = 'Copy to clipboard',
+  title,
   onClose,
 }: CopyToClipboardDialogProps): ReactElement => {
+  const t = useT();
   const [copyState, setCopyState] = useState<null | 'copied' | 'failed'>(null);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -41,10 +43,10 @@ export const CopyToClipboardDialog = ({
           tabIndex={-1}
           onKeyDown={handleKeyDown}
         >
-          <h2>{title}</h2>
+          <h2>{title ?? t.misc.clipboard.dialogTitle}</h2>
 
           <div className='dialog_body'>
-            <p>The text below couldn’t be copied to your clipboard. You will need to copy it manually.</p>
+            <p>{t.misc.clipboard.manualCopy}</p>
             <span className='copy-to-clipboard_value-sizer'>
               {content}
             </span>
@@ -57,19 +59,19 @@ export const CopyToClipboardDialog = ({
             <p className='copy-to-clipboard_action'>
               <button onClick={handleCopy}>
                 <CopyIcon/>
-                <span>Copy</span>
+                <span>{t.misc.clipboard.copy}</span>
               </button>
 
               {copyState === 'copied' && (
-                <span>Copied to clipboard.</span>
+                <span>{t.misc.clipboard.copiedShort}</span>
               )}
               {copyState === 'failed' && (
-                <span>Could not copy to clipboard.</span>
+                <span>{t.misc.clipboard.failed}</span>
               )}
             </p>
           </div>
 
-          <Tooltip text='Close' placement='left' provideLabel>
+          <Tooltip text={t.common.close} placement='left' provideLabel>
             <button className='dialog_close' onClick={onClose}>
               <CloseIcon/>
             </button>

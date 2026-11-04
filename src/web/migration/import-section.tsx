@@ -1,6 +1,7 @@
 import { ReactElement, ReactNode, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { intersperse, joinListNatural } from '../helpers';
+import { useT } from '../i18n';
 import { ArrowRightIcon } from '../icons';
 import { Notice } from '../notices';
 import { AllStorageKeys } from '../storage';
@@ -37,6 +38,8 @@ interface UntrustedDataState {
 interface ErrorState {
   readonly type: 'error';
   readonly message: string | null;
+  /** If true, the data was parsed but is not an object; message is null. */
+  readonly badFormat?: boolean;
   readonly failedKeys: readonly string[];
   readonly importedKeys: readonly string[];
 }
@@ -47,6 +50,7 @@ export const ImportSection = (): ReactElement => {
   const [query] = useSearchParams();
 
   const url = useUrl();
+  const t = useT();
 
   const [state, setState] = useState<ImportState>(LoadingState);
 
@@ -59,23 +63,23 @@ export const ImportSection = (): ReactElement => {
   let children: ReactElement;
   switch (state.type) {
     case 'loading':
-      children = <p>Importing...</p>;
+      children = <p>{t.misc.import.importing}</p>;
       break;
     case 'missingData':
       children = <>
         <Notice kind='warning'>
-          Hmmm, looks like the URL doesn’t contain any importable data.
+          {t.misc.import.missingData}
         </Notice>
-        <p>You can go back and retry the export. If it still doesn’t work, please report the error.</p>
+        <p>{t.misc.import.missingDataHint}</p>
       </>;
       break;
     case 'success':
       children = <>
-        <p>Everything was imported successfully!</p>
-        <p>You may need to reload the page to see the change.</p>
+        <p>{t.misc.import.success}</p>
+        <p>{t.misc.import.reloadToSee}</p>
         <p>
           <Link to={url.recipes} replace>
-            Continue to cookbook <ArrowRightIcon/>
+            {t.misc.migrate.continueToCookbook} <ArrowRightIcon/>
           </Link>
         </p>
       </>;
@@ -84,30 +88,33 @@ export const ImportSection = (): ReactElement => {
       const { data } = state;
       children = <>
         <Notice kind='warning'>
-          Couldn’t verify this data came from a trusted source.
+          {t.misc.import.untrusted}
         </Notice>
         {TrustedHosts.length > 0 ? (
           <p>
-            {'It was not possible to verify that this request came from '}
-            {joinListNatural(TrustedHosts, ', ', ' or ')}.
+            {t.misc.import.untrustedFrom(
+              joinListNatural(TrustedHosts, ', ', t.misc.import.listOr)
+            )}
           </p>
         ) : (
-          <p>This website has no trusted sources configured.</p>
+          <p>{t.misc.import.noTrustedSources}</p>
         )}
         <p>
-          If you did not initiate the migration or get a link from a trusted friend, you should probably abort.
+          {t.misc.import.warning1}
           {' '}
-          If you continue with the import, <strong>existing data will be overwritten</strong>.
+          {t.misc.import.warning2Prefix}
+          <strong>{t.misc.import.warning2Strong}</strong>
+          {t.misc.import.warning2Suffix}
           {' '}
-          Proceed with the import at your own risk.
+          {t.misc.import.warning3}
         </p>
         <p>
           <button onClick={() => setState(performImport(data))}>
-            Import data anyway
+            {t.misc.import.importAnyway}
           </button>
           {' '}
           <Link to={url.recipes} replace className='btn'>
-            Abort import
+            {t.misc.import.abort}
           </Link>
         </p>
       </>;
@@ -116,14 +123,17 @@ export const ImportSection = (): ReactElement => {
     case 'error':
       children = <>
         <Notice kind='error'>
-          Something went wrong when importing your data.
+          {t.misc.import.error}
         </Notice>
-        {state.message != null && (
-          <p>The error message was: {state.message}</p>
+        {(state.message != null || state.badFormat) && (
+          <p>
+            {t.misc.import.errorMessage}
+            {state.badFormat ? t.misc.import.badFormat : state.message}
+          </p>
         )}
         {state.failedKeys.length > 0 && (
           <p>
-            {'The following data could not be imported: '}
+            {t.misc.import.failedKeys}
             {intersperse<ReactNode>(
               state.failedKeys.map(key => <i key={key}>{key}</i>),
               ', '
@@ -132,17 +142,17 @@ export const ImportSection = (): ReactElement => {
         )}
         {state.importedKeys.length > 0 && (
           <p>
-            {'The following data was imported successfully: '}
+            {t.misc.import.importedKeys}
             {intersperse<ReactNode>(
               state.importedKeys.map(key => <i key={key}>{key}</i>),
               ', '
             )}
           </p>
         )}
-        <p>It may help to reload the page to try again.</p>
+        <p>{t.misc.import.reloadToRetry}</p>
         <p>
           <button onClick={() => window.location.reload()}>
-            Reload page
+            {t.misc.import.reloadPage}
           </button>
         </p>
       </>;
@@ -174,7 +184,8 @@ const prepareImport = (query: URLSearchParams): ImportState => {
     ) {
       return {
         type: 'error',
-        message: 'The provided data is not in the right format.',
+        message: null,
+        badFormat: true,
         failedKeys: [],
         importedKeys: [],
       };

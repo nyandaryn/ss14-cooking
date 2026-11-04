@@ -9,11 +9,14 @@ import {
   useRef,
   useState,
 } from 'react';
+import { Lang } from '../i18n/lang';
 import { SettingsKey, useStorage } from '../storage';
 
 export interface Settings {
   readonly theme: ThemeSetting;
   readonly temperatureUnit: TemperatureUnitSetting;
+  /** Site language. Absent = detect from the browser. */
+  readonly language?: Lang;
 }
 
 export type ThemeSetting = 'dark' | 'light';

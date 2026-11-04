@@ -12,7 +12,7 @@ import { MicrowaveRecipeType, Recipe as RecipeData } from '../../types';
 import { useGameData } from '../context';
 import { Dropdown, DropdownExtraItem, DropdownOption } from '../dropdown';
 import { useIsFavorite } from '../favorites';
-import { joinListNatural } from '../helpers';
+import { Messages, useT } from '../i18n';
 import {
   ClearFilterIcon,
   FilterActiveIcon,
@@ -47,14 +47,15 @@ export { searchByName };
 
 type SortOrder = 'default' | 'alpha';
 
-const SortOptions: DropdownOption[] = [
-  { value: 'default', name: 'Default order' },
-  { value: 'alpha', name: 'Alphabetic' },
-];
-
 export const RecipeList = memo((): ReactElement => {
   const navigate = useNavigate();
   const location = useLocation();
+  const t = useT();
+
+  const sortOptions = useMemo<DropdownOption[]>(() => [
+    { value: 'default', name: t.recipes.sortDefault },
+    { value: 'alpha', name: t.recipes.sortAlpha },
+  ], [t]);
 
   const {
     recipeList,
@@ -134,16 +135,16 @@ export const RecipeList = memo((): ReactElement => {
 
   const extraSortItems = useMemo<DropdownExtraItem[]>(() => [
     {
-      name: 'Group by method',
+      name: t.recipes.groupByMethod,
       checked: groupByMethod,
       activate: () => setGroupByMethod(!groupByMethod),
     },
     {
-      name: 'Favourites first',
+      name: t.recipes.favoritesFirst,
       checked: favsFirst,
       activate: () => setFavsFirst(!favsFirst),
     },
-  ], [groupByMethod, favsFirst]);
+  ], [groupByMethod, favsFirst, t]);
 
   // Save the current filter in the history state so we can recover it
   // if the user navigates away. Stop filters from just getting lost.
@@ -162,8 +163,8 @@ export const RecipeList = memo((): ReactElement => {
         <InputGroup iconBefore={<SearchIcon/>}>
           <input
             type='search'
-            aria-label='Search recipes by name'
-            placeholder='Search recipes by name...'
+            aria-label={t.recipes.searchLabel}
+            placeholder={t.recipes.searchPlaceholder}
             size={1}
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -175,8 +176,8 @@ export const RecipeList = memo((): ReactElement => {
           placement='below'
           text={
             hasFilter
-              ? describeFilter(filter)
-              : 'Filter by ingredient or method'
+              ? describeFilter(filter, t)
+              : t.recipes.filterButtonTooltip
           }
         >
           <button
@@ -190,11 +191,11 @@ export const RecipeList = memo((): ReactElement => {
             onClick={handleToggleFilter}
           >
             {hasFilter ? <FilterActiveIcon/> : <FilterOpenIcon/>}
-            <span>Filter</span>
+            <span>{t.recipes.filterButton}</span>
           </button>
         </Tooltip>
 
-        <Tooltip placement='below' text='Clear filter'>
+        <Tooltip placement='below' text={t.recipes.clearFilter}>
           <button disabled={!hasFilter} onClick={handleResetFilter}>
             <ClearFilterIcon/>
           </button>
@@ -203,7 +204,7 @@ export const RecipeList = memo((): ReactElement => {
         <Dropdown
           icon={<SortIcon/>}
           value={order}
-          options={SortOptions}
+          options={sortOptions}
           extraItems={extraSortItems}
           onChange={v => setOrder(v as SortOrder)}
         />
@@ -254,13 +255,14 @@ const ResultCount = ({
   totalCount,
 }: ResultCountProps): ReactElement => {
   const { microwaveRecipeTypes, specialTraits } = useGameData();
+  const t = useT();
 
   const isFiltered = isFilterActive(filter) || resultCount !== totalCount;
 
   if (!isFiltered) {
     return (
       <p className='recipe-count'>
-        Showing all {totalCount} recipes.
+        {t.recipes.resultAll(totalCount)}
       </p>
     );
   }
@@ -268,131 +270,50 @@ const ResultCount = ({
   if (resultCount > 0) {
     return (
       <p className='recipe-count'>
-        Showing {resultCount} of {totalCount} recipes.
+        {t.recipes.resultSome(resultCount, totalCount)}
       </p>
     );
   }
 
-  let message = 'Couldn’t find any ';
+  const selectedTraits = specialTraits.filter(
+    trait => (trait.mask & filter.specials) !== 0
+  );
+  const hasIngredients = filter.ingredients.size > 0 || filter.reagents.size > 0;
 
-  if (filter.specials !== 0) {
-    message += joinListNatural(
-      specialTraits
-        .filter(t => (t.mask & filter.specials) !== 0)
-        .map(t => t.filterSummary),
-      ', ',
-      ' and '
-    ) + ' ';
-  }
+  const message = t.recipes.noResults({
+    specialSummaries: selectedTraits.map(trait => trait.filterSummary),
+    specialNames: selectedTraits.map(trait => trait.filterName),
+    methods: filter.methods.map(m =>
+      describeMethod(m, filter.subtypes, microwaveRecipeTypes, t)
+    ),
+    search: /\S/.test(search) ? search.trim() : null,
+    mode: hasIngredients ? filter.ingredientMode : null,
+  });
 
-  if (filter.methods.length > 0) {
-    message += joinListNatural(
-      filter.methods.map(m =>
-        describeMethod(m, filter.subtypes, microwaveRecipeTypes)
-      ),
-      ', ',
-      ' or '
-    );
-  } else {
-    message += 'recipes';
-  }
-
-  if (/\S/.test(search)) {
-    message += ` with ‘${search.trim()}’ in the name`;
-  }
-
-  if (filter.ingredients.size > 0 || filter.reagents.size > 0) {
-    switch (filter.ingredientMode) {
-      case 'all':
-        message += ' that contain all the selected ingredients';
-        break;
-      case 'any':
-        message += ' that contain any of the selected ingredients';
-        break;
-      case 'only':
-        message += ' made from only the selected ingredients';
-        break;
-    }
-  }
-
-  return <p className='recipe-count'>{message}.</p>;
+  return <p className='recipe-count'>{message}</p>;
 };
 
 const describeMethod = (
   method: DisplayMethod,
   subtypes: readonly string[],
-  microwaveSubtypes: Readonly<Record<string, MicrowaveRecipeType>> | null
+  microwaveSubtypes: Readonly<Record<string, MicrowaveRecipeType>> | null,
+  t: Messages
 ): string => {
-  switch (method) {
-    case 'microwave':
-      if (microwaveSubtypes && subtypes.length > 0) {
-        return joinListNatural(
-          subtypes.map(t => microwaveSubtypes[t].filterSummary),
-          ', ',
-          ' or '
-        ) + ' recipes';
-      }
-      return 'microwave recipes';
-    case 'heat':
-      return 'heating recipes';
-    case 'mix':
-      return 'reactions';
-    case 'cut':
-      return 'cutting recipes';
-    case 'roll':
-      return 'rolling pin recipes';
-    case 'deepFry': // Frontier
-      return 'deep-frying recipes';
-    case 'construct':
-      return 'general recipes';
-  }
-};
-
-const describeFilter = (filter: RecipeFilter): string => {
-  const filters: string[] = [];
-
-  if (filter.methods.length > 0) {
-    filters.push(
-      filter.methods.length === 1
-        ? 'one preparation method'
-        : `${filter.methods.length} preparation methods`
+  if (method === 'microwave' && microwaveSubtypes && subtypes.length > 0) {
+    return t.recipes.microwaveSubtypes(
+      subtypes.map(s => microwaveSubtypes[s].filterSummary)
     );
   }
-
-  const ingredientCount = filter.ingredients.size + filter.reagents.size;
-  if (ingredientCount > 0) {
-    let description: string;
-    switch (filter.ingredientMode) {
-      case 'all':
-        description = ingredientCount === 1
-          ? 'recipes using the selected ingredient'
-          : `recipes using all ${ingredientCount} selected ingredients`;
-        break;
-      case 'any':
-        description = ingredientCount === 1
-          ? 'recipes using the selected ingredient'
-          : `recipes using any of the ${ingredientCount} selected ingredients`;
-        break;
-      case 'only':
-        description = ingredientCount === 1
-          ? 'recipes made from only the selected ingredient'
-          : `recipes made from only the ${ingredientCount} selected ingredients`;
-        break;
-    }
-    filters.push(description);
-  }
-
-  if (filter.specials !== 0) {
-    const specialsCount = countOnes(filter.specials);
-    filters.push(
-      specialsCount === 1
-        ? 'one special property'
-        : `${specialsCount} special properties`
-    );
-  }
-
-  return `Filtering by ${joinListNatural(filters, ', ', ' and ')}`;
+  return t.recipes.methodSummaries[method];
 };
+
+const describeFilter = (filter: RecipeFilter, t: Messages): string =>
+  t.recipes.filterDescription({
+    methods: filter.methods.length,
+    ingredients: filter.ingredients.size + filter.reagents.size,
+    mode: filter.ingredientMode,
+    specials: countOnes(filter.specials),
+  });
 
 const countOnes = (value: number): number => {
   // https://graphics.stanford.edu/%7Eseander/bithacks.html#CountBitsSetParallel

@@ -3,7 +3,27 @@ import { Ref, RefObject, useMemo } from 'react';
 import { Recipe } from '../types';
 import { DisplayMethod } from './types';
 
-export const NeutralCollator = new Intl.Collator('en-US');
+let currentCollator = new Intl.Collator('en-US');
+
+/**
+ * Collator for the current site language. The language provider updates it
+ * via `setCollatorLocale()`; switching language also reloads the game data,
+ * so everything sorted with this collator is re-sorted.
+ */
+export const NeutralCollator: Pick<Intl.Collator, 'compare'> = {
+  compare: (a: string, b: string) => currentCollator.compare(a, b),
+};
+
+export const setCollatorLocale = (locale: string): void => {
+  currentCollator = new Intl.Collator(locale);
+};
+
+/**
+ * Normalizes text for case-insensitive substring search. Besides lowercasing,
+ * folds Russian "ё" into "е", since people rarely type the former.
+ */
+export const normalizeSearchText = (text: string): string =>
+  text.toLowerCase().replace(/ё/g, 'е');
 
 export const displayMethod = (recipe: Recipe): DisplayMethod => {
   switch (recipe.method) {
@@ -223,6 +243,9 @@ const genId = customAlphabet(
  * @return The generate ID.
  */
 export const useUniqueId = (): string => useMemo(genId, []);
+
+export const GitHubRepoUrl = (repo: string): string =>
+  `https://github.com/${repo}`;
 
 export const GitHubCommitUrl = (repo: string, commit: string): string =>
   `https://github.com/${repo}/tree/${commit}`;

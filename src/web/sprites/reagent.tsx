@@ -1,5 +1,6 @@
 import { ReactElement, memo } from 'react';
 import { useGameData } from '../context';
+import { useT } from '../i18n';
 import { RawSprite } from './raw';
 
 export interface ReagentSpriteProps {
@@ -14,6 +15,7 @@ export const ReagentSprite = memo(({
     methodSprites: { mix: beakerPosition },
     beakerFill,
   } = useGameData();
+  const t = useT();
 
   const reagent = reagentMap.get(id)!;
 
@@ -21,7 +23,7 @@ export const ReagentSprite = memo(({
 
   return (
     <span className='reagent'>
-      <RawSprite position={beakerPosition!} alt='beaker'/>
+      <RawSprite position={beakerPosition!} alt={t.recipes.methodAlts.mix}/>
       <span
         className='reagent_fill'
         style={{

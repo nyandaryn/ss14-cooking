@@ -717,6 +717,40 @@ select {
       box-shadow: var(--shadow-basic);
     }
 
+    .tabs_lang {
+      display: flex;
+      flex: none;
+      border-radius: 5px;
+      box-shadow: var(--shadow-basic);
+    }
+
+      .tabs_lang-btn {
+        min-width: 40px;
+        min-height: 34px;
+        padding-inline: 8px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+
+        &:not(:first-child) {
+          border-top-left-radius: 0;
+          border-bottom-left-radius: 0;
+          margin-left: -2px;
+        }
+
+        &:not(:last-child) {
+          border-top-right-radius: 0;
+          border-bottom-right-radius: 0;
+        }
+
+        &--current {
+          position: relative;
+          z-index: 1;
+          --button-bg: var(--bg-level-2);
+          --button-bg-pressed: var(--bg-level-2);
+          box-shadow: inset 0 -2px 0 var(--tab-border-current);
+        }
+      }
+
     .tabs_settings {
       display: flex;
       flex: none;

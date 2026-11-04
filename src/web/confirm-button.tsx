@@ -8,6 +8,7 @@ import {
   useEffect,
   useState
 } from 'react';
+import { useT } from './i18n';
 import { Popup, usePopupTrigger } from './popup';
 
 export type Props = {
@@ -30,19 +31,18 @@ export type Props = {
 type State = 'up' | 'held' | 'ready';
 
 const DefaultTimeout = 750; // ms
-const DefaultUsageHint = 'Press and hold to confirm';
-const ReleaseHint = 'Release to confirm';
 
 export const ConfirmButton = ({
   className,
   style,
   timeout = DefaultTimeout,
   tooltip = '',
-  usageHint = DefaultUsageHint,
+  usageHint,
   onClick,
   children,
   ...rest
 }: Props): ReactElement => {
+  const t = useT();
   const [state, setState] = useState<State>('up');
 
   const startHold = useCallback(() => {
@@ -110,8 +110,8 @@ export const ConfirmButton = ({
   }
 
   const tooltipText =
-    state === 'held' ? usageHint :
-    state === 'ready' ? ReleaseHint :
+    state === 'held' ? (usageHint ?? t.misc.confirm.hold) :
+    state === 'ready' ? t.misc.confirm.release :
     tooltip;
 
   return <>

@@ -13,6 +13,7 @@ import { useBlocker } from 'react-router';
 import { MetaData, SpriteAttribution } from '../types';
 import { FocusTrap } from './focus';
 import { GitHubFolderUrl } from './helpers';
+import { useT } from './i18n';
 import { CloseIcon } from './icons';
 import { Overlay } from './overlay';
 import { getPopupRoot } from './popup';
@@ -36,10 +37,11 @@ export const AttributionsLink = memo(({ value, meta }: Props): ReactElement => {
   }, []);
 
   const close = useCallback(() => setOpen(false), []);
+  const t = useT();
 
   return <>
     <a href='#' onClick={handleClick}>
-      Show sprite credits and licenses
+      {t.misc.attributions.showLink}
     </a>
     {open && createPortal(
       <AttributionsDialog value={value} meta={meta} onClose={close}/>,
@@ -63,6 +65,7 @@ const AttributionsDialog = memo(({
   useEffect(() => {
     ref.current?.focus();
   }, []);
+  const t = useT();
 
   // Always prevent navigation while this is open
   useBlocker(true);
@@ -71,9 +74,15 @@ const AttributionsDialog = memo(({
     <Overlay>
       <FocusTrap onPointerDownOutside={onClose}>
         <section className='dialog attributions' ref={ref} tabIndex={-1}>
-          <h2>Sprite credits</h2>
+          <h2>{t.misc.attributions.title}</h2>
 
-          <p><i>Clickable links in the</i> Copyright <i>field are a best-faith interpretation and not guaranteed to be correct.</i></p>
+          <p>
+            <i>{t.misc.attributions.disclaimerPrefix}</i>
+            {' '}
+            {t.misc.attributions.disclaimerField}
+            {' '}
+            <i>{t.misc.attributions.disclaimerSuffix}</i>
+          </p>
 
           <ul className='attributions_list thin-scroll'>
             {value.map(attr =>
@@ -81,7 +90,7 @@ const AttributionsDialog = memo(({
             )}
           </ul>
 
-          <Tooltip text='Close' placement='left' provideLabel>
+          <Tooltip text={t.common.close} placement='left' provideLabel>
             <button className='dialog_close' onClick={onClose}>
               <CloseIcon/>
             </button>
@@ -98,6 +107,7 @@ interface AttributionItemProps {
 }
 
 const AttributionItem = ({ attr, meta }: AttributionItemProps) => {
+  const t = useT();
   const pathUrl = GitHubFolderUrl(
     meta.repo,
     meta.commit,
@@ -112,12 +122,20 @@ const AttributionItem = ({ attr, meta }: AttributionItemProps) => {
         )}
       </div>
       <p>
-        <b>Path:</b>
+        <b>{t.misc.attributions.path}</b>
         {' '}
         <a href={pathUrl} target='_blank' rel='noopener'>{attr.path}</a>
       </p>
-      <p><b>License:</b> <LicenseText license={attr.license}/></p>
-      <p><b>Copyright:</b> <CopyrightText copyright={attr.copyright}/></p>
+      <p>
+        <b>{t.misc.attributions.license}</b>
+        {' '}
+        <LicenseText license={attr.license}/>
+      </p>
+      <p>
+        <b>{t.misc.attributions.copyright}</b>
+        {' '}
+        <CopyrightText copyright={attr.copyright}/>
+      </p>
     </li>
   );
 };

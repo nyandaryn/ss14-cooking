@@ -1,4 +1,5 @@
 import { ReactElement, ReactNode, memo, useContext } from 'react';
+import { useT } from '../i18n';
 import { CloseIcon, ErrorIcon, InformationIcon, WarningIcon } from '../icons';
 import { Tooltip } from '../tooltip';
 import { NoticesContext } from './context';
@@ -23,6 +24,7 @@ export const Notice = memo(({
   children,
 }: Props): ReactElement | null => {
   const context = useContext(NoticesContext);
+  const t = useT();
   if (id != null && context.isDismissed(id)) {
     return null;
   }
@@ -36,7 +38,7 @@ export const Notice = memo(({
       </div>
 
       {id != null && (
-        <Tooltip provideLabel text='Dismiss' placement='left'>
+        <Tooltip provideLabel text={t.misc.notices.dismiss} placement='left'>
           <button
             className='notice_dismiss'
             onClick={() => context.dismiss(id)}

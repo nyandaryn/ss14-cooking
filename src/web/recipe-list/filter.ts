@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction } from 'react';
 import { Entity, Reagent, Recipe } from '../../types';
 import {
   displayMethod,
+  normalizeSearchText,
   recipeHasAllIngredients,
   recipeHasAllReagents,
   recipeHasAnyIngredient,
@@ -336,7 +337,7 @@ export const filterIngredientsByName = (
   query = prepareSearchQuery(query);
   return ingredients.filter(id => {
     const name = map.get(id)!.name;
-    return name.toLowerCase().includes(query);
+    return normalizeSearchText(name).includes(query);
   });
 };
 
@@ -345,8 +346,8 @@ export const filterReagentsByName = (
   query: string
 ): Reagent[] => {
   query = prepareSearchQuery(query);
-  return reagents.filter(r => r.name.toLowerCase().includes(query));
+  return reagents.filter(r => normalizeSearchText(r.name).includes(query));
 };
 
 export const prepareSearchQuery = (query: string): string =>
-  query.trim().replace(/\s+/, ' ').toLowerCase();
+  normalizeSearchText(query.trim().replace(/\s+/g, ' '));

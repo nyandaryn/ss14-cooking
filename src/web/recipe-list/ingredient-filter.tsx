@@ -11,6 +11,8 @@ import {
 } from 'react';
 import { Entity, Reagent } from '../../types';
 import { useGameData } from '../context';
+import { normalizeSearchText } from '../helpers';
+import { useT } from '../i18n';
 import { EntitySprite, ReagentSprite } from '../sprites';
 import { RecipeFilter, prepareSearchQuery } from './filter';
 
@@ -32,6 +34,7 @@ export const IngredientSuggestions = memo(({
   clearSearch,
 }: Props): ReactElement | null => {
   const { entityMap, ingredients, reagentList } = useGameData();
+  const t = useT();
 
   const results = useMemo(() => {
     const results: SearchResult[] = [];
@@ -39,13 +42,13 @@ export const IngredientSuggestions = memo(({
       const query = prepareSearchQuery(search);
       for (const id of ingredients) {
         const entity = entityMap.get(id)!;
-        if (entity.name.toLowerCase().includes(query)) {
+        if (normalizeSearchText(entity.name).includes(query)) {
           results.push(['solid', entity]);
         }
       }
 
       for (const reagent of reagentList) {
-        if (reagent.name.toLowerCase().includes(query)) {
+        if (normalizeSearchText(reagent.name).includes(query)) {
           results.push(['reagent', reagent]);
         }
       }
@@ -69,7 +72,7 @@ export const IngredientSuggestions = memo(({
 
   return (
     <div className='recipe-ingredients'>
-      <span>Filter by ingredient:</span>
+      <span>{t.recipes.ingredientSuggestions}</span>
       <ul className='recipe-ingredients_list'>
         {results.map(result =>
           <Suggestion

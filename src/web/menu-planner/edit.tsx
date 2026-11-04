@@ -13,6 +13,7 @@ import { Link, useBlocker, useNavigate, useParams } from 'react-router';
 import { ConfirmButton } from '../confirm-button';
 import { useGameData } from '../context';
 import { useUniqueId } from '../helpers';
+import { Messages, useT } from '../i18n';
 import { ArrowLeftIcon, SaveIcon } from '../icons';
 import { getPopupRoot } from '../popup';
 import { Tooltip } from '../tooltip';
@@ -37,6 +38,7 @@ export const MenuEditor = (): ReactElement => {
 
   const navigate = useNavigate();
   const url = useUrl();
+  const t = useT();
 
   const {
     forkId,
@@ -86,10 +88,12 @@ export const MenuEditor = (): ReactElement => {
     initialIngredientVisibility
   );
 
-  const exampleName = useMemo(() => {
-    const index = Math.floor(ExampleNames.length * Math.random());
-    return ExampleNames[index];
-  }, []);
+  // Pick a stable random index, so the example doesn't change on re-render
+  // (but does follow the language).
+  const exampleIndex = useMemo(() => Math.random(), []);
+  const exampleNames = t.menu.editor.exampleNames;
+  const exampleName =
+    exampleNames[Math.floor(exampleNames.length * exampleIndex)];
 
   const handleChangeName = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
@@ -190,11 +194,12 @@ export const MenuEditor = (): ReactElement => {
       initialIngredientVisibility,
       ingredientVisibility
     );
+  const unsavedChangesPrompt = t.menu.editor.unsavedChangesPrompt;
   useEffect(() => {
     if (isDirty) {
       const onBeforeUnload = (e: BeforeUnloadEvent) => {
         e.preventDefault();
-        e.returnValue = "You have unsaved changes. Discard?";
+        e.returnValue = unsavedChangesPrompt;
       };
       window.addEventListener('beforeunload', onBeforeUnload);
       return () => {
@@ -202,7 +207,7 @@ export const MenuEditor = (): ReactElement => {
       };
     }
     return undefined;
-  }, [isDirty]);
+  }, [isDirty, unsavedChangesPrompt]);
 
   const blocker = useBlocker(() => isDirty && !ignoreDirty.current);
 
@@ -211,11 +216,11 @@ export const MenuEditor = (): ReactElement => {
   if (!menu) {
     return (
       <div className='planner_view'>
-        <h2>Menu not found</h2>
+        <h2>{t.menu.notFound}</h2>
         <div className='planner_view-actions'>
           <Link to={url.menuList} className='btn floating'>
             <ArrowLeftIcon/>
-            <span>Back to listing</span>
+            <span>{t.menu.backToListing}</span>
           </Link>
         </div>
       </div>
@@ -231,15 +236,16 @@ export const MenuEditor = (): ReactElement => {
   return (
     <div className='planner_editor'>
       <div className='planner_editor-header'>
-        <label htmlFor={`${htmlId}-name`}>Name:</label>
+        <label htmlFor={`${htmlId}-name`}>{t.menu.editor.nameLabel}</label>
         <input
           id={`${htmlId}-name`}
           type='text'
-          placeholder={`E.g.: ${exampleName}`}
+          placeholder={t.menu.editor.namePlaceholder(exampleName)}
           value={menu.name}
           onChange={handleChangeName}
         />
         <Actions
+          t={t}
           isNew={id == null}
           isDirty={isDirty}
           onSave={handleSave}
@@ -316,16 +322,8 @@ const isMenuDirty = (
   return false;
 };
 
-const ExampleNames = [
-  'Favourite recipes',
-  'Ultimate Cake Collection',
-  'Burgers and Pizzas',
-  'Soups, Stews, Salads and Stuff',
-  'Assorted basics',
-  'I have no botanist and I must cook',
-];
-
 interface ActionsProps {
+  t: Messages;
   isNew: boolean;
   isDirty: boolean,
   onSave: () => void;
@@ -334,6 +332,7 @@ interface ActionsProps {
 }
 
 const Actions = ({
+  t,
   isNew,
   isDirty,
   onSave,
@@ -341,27 +340,27 @@ const Actions = ({
   onDelete,
 }: ActionsProps): ReactElement =>
   <div className='planner_editor-actions'>
-    <Tooltip text='Save the menu and close the editor'>
+    <Tooltip text={t.menu.editor.saveTooltip}>
       <button onClick={onSave}>
         <SaveIcon/>
-        <span>Save</span>
+        <span>{t.menu.editor.save}</span>
       </button>
     </Tooltip>
 
     <ConfirmButton
       tooltip={isNew
-        ? 'Discard everything and return to the list'
-        : 'Discard all changes and close the editor'
+        ? t.menu.editor.discardNewTooltip
+        : t.menu.editor.discardTooltip
       }
       timeout={isDirty ? 400 : 150}
       onClick={onDiscard}
     >
-      Discard
+      {t.menu.editor.discard}
     </ConfirmButton>
 
     {!isNew && (
-      <ConfirmButton tooltip='Delete the menu' onClick={onDelete}>
-        Delete
+      <ConfirmButton tooltip={t.menu.editor.deleteTooltip} onClick={onDelete}>
+        {t.menu.editor.delete}
       </ConfirmButton>
     )}
   </div>;

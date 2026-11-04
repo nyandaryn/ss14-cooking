@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react';
 import { useGameData } from '../context';
+import { useT } from '../i18n';
 import { ArrowDownIcon, ArrowUpIcon, SearchIcon } from '../icons';
 import { InputGroup } from '../input-group';
 import { Recipe } from '../recipe';
@@ -29,6 +30,7 @@ export const SelectedRecipes = memo(({
   onMoveRecipe,
 }: Props): ReactElement => {
   const { recipeMap } = useGameData();
+  const t = useT();
 
   const [query, setQuery] = useState('');
 
@@ -39,12 +41,12 @@ export const SelectedRecipes = memo(({
 
   return (
     <div className='planner_editor-recipes'>
-      <h3>Selected Recipes</h3>
+      <h3>{t.menu.selected.title}</h3>
       <div className='planner_editor-search'>
         <InputGroup className='planner_editor-query' iconBefore={<SearchIcon/>}>
           <input
             type='search'
-            placeholder='Find new recipes by name'
+            placeholder={t.menu.selected.searchPlaceholder}
             size={1}
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -71,7 +73,7 @@ export const SelectedRecipes = memo(({
           ) : null)}
         </ul>
       ) : (
-        <p>The menu is currently empty. Search for recipes above to add them!</p>
+        <p>{t.menu.selected.empty}</p>
       )}
     </div>
   );
@@ -92,10 +94,11 @@ const MenuRecipe = memo(({
   onRemove,
   onMove,
 }: MenuRecipeProps): ReactElement => {
+  const t = useT();
   return (
     <li key={id} className='planner_editor-recipe'>
       <div className='planner_editor-recipe-header'>
-        <Tooltip text='Move up' provideLabel>
+        <Tooltip text={t.menu.selected.moveUp} provideLabel>
           <button
             disabled={index === 0}
             onClick={() => onMove(index, -1)}
@@ -103,7 +106,7 @@ const MenuRecipe = memo(({
             <ArrowUpIcon/>
           </button>
         </Tooltip>
-        <Tooltip text='Move down' provideLabel>
+        <Tooltip text={t.menu.selected.moveDown} provideLabel>
           <button
             disabled={index === total - 1}
             onClick={() => onMove(index, 1)}
@@ -152,6 +155,7 @@ const SearchResults = memo(({
     entityMap,
     reagentMap,
   } = useGameData();
+  const t = useT();
 
   const compare = useMemo(
     () => compareByName(entityMap, reagentMap),
@@ -208,13 +212,15 @@ const SearchResults = memo(({
         {results.length > limit && (
           <li>
             <button onClick={showMore}>
-              More results...
+              {t.menu.selected.moreResults}
             </button>
           </li>
         )}
         {results.length === 0 && (
           <li className='planner_editor-no-matches'>
-            Couldn’t find any new recipes with <i>{query}</i> in the name.
+            {t.menu.selected.noMatchesPrefix}
+            <i>{query}</i>
+            {t.menu.selected.noMatchesSuffix}
           </li>
         )}
       </ul>

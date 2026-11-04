@@ -68,8 +68,10 @@ export interface SearchableRecipeData {
   readonly recipesByReagentIngredient: ReadonlyMap<string, readonly string[]>;
   /** Lowercase recipe names indexed by recipe ID. */
   readonly searchableRecipeNames: ReadonlyMap<string, string>;
-  /** All available recipe groups, sorted alphabetically. */
+  /** All available recipe groups, sorted alphabetically by display name. */
   readonly recipeGroups: readonly string[];
+  /** Localized recipe group display names, keyed by group ID. */
+  readonly groupNames: Readonly<Record<string, string>>;
 
   /** Food sequence start points indexed by food sequence key. */
   readonly foodSequenceStartPoints: ReadonlyMap<string, readonly string[]>;
@@ -101,13 +103,18 @@ export interface NoticeData {
   /** The unique ID of this notice. */
   readonly id: string;
   readonly kind?: 'info' | 'warning' | 'error';
-  /** The title of this notice (unformatted text). */
-  readonly title: string;
+  /**
+   * The title of this notice (unformatted text). Either one value for every
+   * language, or a map from site language code to value.
+   */
+  readonly title: string | Readonly<Record<string, string>>;
   /**
    * The paragraphs that make up the contents of the notice.
-   * May contain formatting tags.
+   * May contain formatting tags. Can be localized like `title`.
    */
-  readonly content: readonly string[];
+  readonly content:
+    | readonly string[]
+    | Readonly<Record<string, readonly string[]>>;
   readonly forks?: readonly string[];
   readonly icon?: NoticeIcon;
   /**

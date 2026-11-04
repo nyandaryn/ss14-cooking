@@ -1,5 +1,6 @@
 import { KeyboardEvent, ReactElement, useCallback } from 'react';
 import { FocusTrap } from '../focus';
+import { useT } from '../i18n';
 import { Overlay } from '../overlay';
 
 export interface Props {
@@ -13,6 +14,7 @@ export const DiscardChangesDialog = ({
   onSave,
   onDiscard,
 }: Props): ReactElement => {
+  const t = useT();
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -29,20 +31,20 @@ export const DiscardChangesDialog = ({
           tabIndex={-1}
           onKeyDown={handleKeyDown}
         >
-          <h2>Unsaved changes</h2>
+          <h2>{t.menu.discardDialog.title}</h2>
           <div className='dialog_body thin-scroll'>
-            What do you want to do with your changes?
+            {t.menu.discardDialog.body}
           </div>
           <div className='dialog_actions'>
             <button onClick={onStay}>
-              Stay here
+              {t.menu.discardDialog.stay}
             </button>
             <span className='spacer'/>
             <button onClick={onSave}>
-              Save changes
+              {t.menu.discardDialog.save}
             </button>
             <button onClick={onDiscard}>
-              Discard
+              {t.menu.discardDialog.discard}
             </button>
           </div>
         </div>

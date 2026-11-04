@@ -2,6 +2,7 @@ import { ReactElement, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router';
 import { FocusTrap } from './focus';
+import { useT } from './i18n';
 import { ArrowRightIcon, CloseIcon, InformationIcon } from './icons';
 import { getPopupRoot } from './popup';
 import { hasImportantStoredData } from './storage';
@@ -29,6 +30,7 @@ export const CanonicalRedirect = (): ReactElement | null => {
 
 const CanonicalRedirectDialog = (): ReactElement | null => {
   const [open, setOpen] = useState(true);
+  const t = useT();
 
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -47,22 +49,22 @@ const CanonicalRedirectDialog = (): ReactElement | null => {
           tabIndex={-1}
           ref={ref}
         >
-          <h2>The Cookbook Has Moved!</h2>
+          <h2>{t.misc.redirect.title}</h2>
 
           <div className='dialog_body redirect_body thin-scroll'>
-            <p>It’s about time the cookbook got a proper domain name, isn’t it? That’s why it’s been moved to a new URL! From now on, you can find the cookbook here:</p>
+            <p>{t.misc.redirect.body1}</p>
             <p className='redirect_canonical'>
               <ArrowRightIcon/>
               <a href={CANONICAL_URL!} rel='noopener'>
                 {CANONICAL_URL}
               </a>
             </p>
-            <p>Don’t forget to update your bookmark!</p>
-            <p><strong>The old version will no longer be updated.</strong></p>
+            <p>{t.misc.redirect.body2}</p>
+            <p><strong>{t.misc.redirect.body3}</strong></p>
             <DataMigrationNotice onClose={() => setOpen(false)}/>
           </div>
 
-          <Tooltip text='Close' placement='left' provideLabel>
+          <Tooltip text={t.common.close} placement='left' provideLabel>
             <button className='dialog_close' onClick={() => setOpen(false)}>
               <CloseIcon/>
             </button>
@@ -82,6 +84,7 @@ const DataMigrationNotice = ({
   onClose,
 }: DataMigrationNoticeProps): ReactElement | null => {
   const url = useUrl();
+  const t = useT();
 
   if (!hasImportantStoredData()) {
     return null;
@@ -91,13 +94,13 @@ const DataMigrationNotice = ({
     <div className='redirect_data'>
       <InformationIcon/>
       <div className='redirect_data-body'>
-        <p>It looks like you’ve used the cookbook before. You have some saved data (menus and/or favourite recipes). Would you like to migrate your data now?</p>
+        <p>{t.misc.redirect.dataNotice}</p>
         <Link
           to={url.migrateExport}
           className='btn'
           onClick={onClose}
         >
-          Migrate my data
+          {t.misc.redirect.migrateButton}
         </Link>
       </div>
     </div>

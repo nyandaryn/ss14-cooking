@@ -7,7 +7,8 @@ import { GameDataProvider } from './context';
 import { FavoritesProvider } from './favorites';
 import { FetchError } from './fetch-error';
 import { ForkProvider } from './fork-context';
-import { GitHubCommitUrl } from './helpers';
+import { GitHubCommitUrl, GitHubRepoUrl } from './helpers';
+import { Lang, useLang } from './i18n';
 import { NoticesProvider } from './notices';
 import { PrivacyPolicyLink } from './privacy';
 import { RecipeExplorerProvider } from './recipe-explorer';
@@ -20,14 +21,31 @@ export interface Props {
 
 const NoticesPath = `${BASE_PATH}/data/notices.json`;
 
-const ForkDataPath = (id: string, hash: string) =>
-  `${BASE_PATH}/data/data_${id}.${hash}.json`;
+const ForkDataPath = (id: string, lang: string, hash: string) =>
+  `${BASE_PATH}/data/data_${id}.${lang}.${hash}.json`;
+
+/**
+ * Picks the data file for the requested language, falling back to the fork's
+ * first (default) language if the fork has no data for it.
+ */
+const pickDataFile = (
+  fork: ForkData,
+  lang: Lang
+): [lang: string, hash: string] => {
+  const hash = fork.hashes[lang];
+  if (hash) {
+    return [lang, hash];
+  }
+  const [fallback] = Object.entries(fork.hashes);
+  return fallback;
+};
 
 const SpriteSheetPath = (fileName: string) =>
   `${BASE_PATH}/data/${fileName}`;
 
 export const App = ({ forks }: Props): ReactElement => {
   const [query, setQuery] = useSearchParams();
+  const { lang, locale, t } = useLang();
 
   const queryFork = query.get('fork');
   const fork = useMemo(() => {
@@ -52,8 +70,9 @@ export const App = ({ forks }: Props): ReactElement => {
   }, [setQuery]);
 
   const forkData = forks.find(f => f.id === fork)!;
+  const [dataLang, dataHash] = pickDataFile(forkData, lang);
   useEffect(() => {
-    fetch(ForkDataPath(forkData.id, forkData.hash))
+    fetch(ForkDataPath(forkData.id, dataLang, dataHash))
       .then(res => res.json())
       .catch(err => {
         console.error('Error fetching game data:', err);
@@ -74,16 +93,16 @@ export const App = ({ forks }: Props): ReactElement => {
         return [];
       })
       .then(setNotices);
-  }, [forkData]);
+  }, [forkData, dataLang, dataHash]);
 
   if (error) {
     return (
-      <FetchError message='Something went wrong when loading recipe data.'/>
+      <FetchError message={t.common.errors.recipeData}/>
     );
   }
 
   if (!data || !notices) {
-    return <p>Loading...</p>
+    return <p>{t.common.loading}</p>
   }
 
   const meta = forkData.meta;
@@ -102,28 +121,38 @@ export const App = ({ forks }: Props): ReactElement => {
           </ForkProvider>
           <footer>
             <p>
-              {'Recipes generated from commit '}
+              {t.common.footer.generatedPrefix}
+              <a href={GitHubRepoUrl(meta.repo)} target='_blank' rel='noopener'>
+                {meta.repo}
+              </a>
+              {t.common.footer.generatedCommit}
               <a href={commitLink} target='_blank' rel='noopener'>
                 {meta.commit.slice(0, 9)}
               </a>
-              {` on ${formatDate(meta.date)}.`}
+              {t.common.footer.generatedDate(formatDate(meta.date, locale))}
             </p>
             <p>
-              Made by Alice Heurlin / Arimah, 2024.
-              {' '}
-              Discord: @arimah.
-              {' '}
-              GitHub: <a href='https://github.com/arimah' target='_blank' rel='noopener'>arimah</a>.
+              {t.common.footer.basedOnPrefix}
+              <a
+                href='https://github.com/arimah/ss14-cookbook'
+                target='_blank'
+                rel='noopener'
+              >
+                SS14 Cookbook
+              </a>
+              {t.common.footer.basedOnSuffix}
             </p>
             <p>
-              {'Sprites were made by many contributors: '}
+              {t.common.footer.spritesPrefix}
               <AttributionsLink value={data.attributions} meta={meta}/>
-              {'.'}
+              {t.common.footer.spritesSuffix}
             </p>
             <p>
               <PrivacyPolicyLink/>
               {' • '}
-              <a href={REPO_URL} target='_blank' rel='noopener'>Source code</a>
+              <a href={REPO_URL} target='_blank' rel='noopener'>
+                {t.common.footer.sourceCode}
+              </a>
             </p>
           </footer>
           <CanonicalRedirect/>
@@ -154,16 +183,8 @@ const findCurrentFork = (
   return defaultFork;
 };
 
-const formatDate = (timestamp: number): string => {
-  const date = new Date(timestamp);
-
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-
-  const hour = date.getHours().toString().padStart(2, '0');
-  const minute = date.getMinutes().toString().padStart(2, '0');
-  const second = date.getSeconds().toString().padStart(2, '0');
-
-  return `${year}-${month}-${day} at ${hour}:${minute}:${second}`;
-};
+const formatDate = (timestamp: number, locale: string): string =>
+  new Date(timestamp).toLocaleString(locale, {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  });

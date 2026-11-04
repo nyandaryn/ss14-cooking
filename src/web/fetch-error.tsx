@@ -1,18 +1,22 @@
 import { ReactElement } from 'react';
+import { useT } from './i18n';
 
 export interface FetchErrorProps {
   message: string;
 }
 
 export const FetchError = ({ message }: FetchErrorProps): ReactElement => {
+  const t = useT();
   return <>
     <p>{message} :(</p>
     <p>
-      It may help to reload the page.
+      {t.common.errors.reloadHint}
       {' '}
-      If the problem persists, contact me on Discord (@arimah) or Telegram (
-        <a href='https://t.me/arimah42' target='_blank' rel='noopener'>@arimah42</a>
-      ).
+      {t.common.errors.reportPrefix}
+      <a href={`${REPO_URL}/issues`} target='_blank' rel='noopener'>
+        {t.common.errors.reportLink}
+      </a>
+      {t.common.errors.reportSuffix}
     </p>
   </>;
 }

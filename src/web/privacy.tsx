@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { FocusTrap } from './focus';
+import { useT } from './i18n';
 import { CloseIcon } from './icons';
 import { Overlay } from './overlay';
 import { getPopupRoot } from './popup';
@@ -23,10 +24,11 @@ export const PrivacyPolicyLink = memo((): ReactElement => {
   }, []);
 
   const close = useCallback(() => setOpen(false), []);
+  const t = useT();
 
   return <>
     <a href='#' onClick={handleClick}>
-      Privacy policy
+      {t.misc.privacy.link}
     </a>
     {open && createPortal(
       <PrivacyPolicyDialog onClose={close}/>,
@@ -43,6 +45,7 @@ const PrivacyPolicyDialog = memo(({
   onClose,
 }: PrivacyPolicyDialogProps): ReactElement => {
   const ref = useRef<HTMLElement>(null);
+  const t = useT();
   useEffect(() => {
     ref.current?.focus();
     document.body.classList.add('overlay-open');
@@ -55,12 +58,12 @@ const PrivacyPolicyDialog = memo(({
     <Overlay>
       <FocusTrap onPointerDownOutside={onClose}>
         <section className='dialog privacy' ref={ref} tabIndex={-1}>
-          <h2>Privacy policy</h2>
+          <h2>{t.misc.privacy.title}</h2>
           <div
             className='privacy_text thin-scroll'
             dangerouslySetInnerHTML={{__html: PRIVACY_POLICY_HTML}}
           />
-          <Tooltip text='Close' placement='left' provideLabel>
+          <Tooltip text={t.common.close} placement='left' provideLabel>
             <button className='dialog_close' onClick={onClose}>
               <CloseIcon/>
             </button>
