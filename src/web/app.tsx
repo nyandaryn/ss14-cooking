@@ -8,7 +8,7 @@ import { FavoritesProvider } from './favorites';
 import { FetchError } from './fetch-error';
 import { ForkProvider } from './fork-context';
 import { GitHubCommitUrl, GitHubRepoUrl } from './helpers';
-import { Lang, useLang } from './i18n';
+import { Lang, pickLocalized, useLang } from './i18n';
 import { NoticesProvider } from './notices';
 import { PrivacyPolicyLink } from './privacy';
 import { RecipeExplorerProvider } from './recipe-explorer';
@@ -119,7 +119,7 @@ export const App = ({ forks }: Props): ReactElement => {
   }
 
   const meta = forkData.meta;
-  const commitLink = GitHubCommitUrl(meta.repo, meta.commit);
+  const sourceForks = forks.filter(f => !f.hidden || f.id === fork);
 
   return (
     <UrlProvider>
@@ -133,17 +133,23 @@ export const App = ({ forks }: Props): ReactElement => {
             </FavoritesProvider>
           </ForkProvider>
           <footer>
-            <p>
-              {t.common.footer.generatedPrefix}
-              <a href={GitHubRepoUrl(meta.repo)} target='_blank' rel='noopener'>
-                {meta.repo}
-              </a>
-              {t.common.footer.generatedCommit}
-              <a href={commitLink} target='_blank' rel='noopener'>
-                {meta.commit.slice(0, 9)}
-              </a>
-              {t.common.footer.generatedDate(formatDate(meta.date, locale))}
-            </p>
+            {sourceForks.map(f =>
+              <p key={f.id}>
+                {t.common.footer.generatedPrefix(pickLocalized(f.name, lang))}
+                <a href={GitHubRepoUrl(f.meta.repo)} target='_blank' rel='noopener'>
+                  {f.meta.repo}
+                </a>
+                {t.common.footer.generatedCommit}
+                <a
+                  href={GitHubCommitUrl(f.meta.repo, f.meta.commit)}
+                  target='_blank'
+                  rel='noopener'
+                >
+                  {f.meta.commit.slice(0, 9)}
+                </a>
+                {t.common.footer.generatedDate(formatDate(f.meta.date, locale))}
+              </p>
+            )}
             <p>
               {t.common.footer.basedOnPrefix}
               <a

@@ -43,7 +43,7 @@ export const en = {
   },
 
   footer: {
-    generatedPrefix: 'Recipes and names generated from ',
+    generatedPrefix: (build: string) => `${build}: recipes and names generated from `,
     generatedCommit: ' (commit ',
     generatedDate: (date: string) => `) on ${date}.`,
     basedOnPrefix: 'Based on ',
@@ -101,7 +101,7 @@ export const ru: CommonMessages = {
   },
 
   footer: {
-    generatedPrefix: 'Рецепты и названия взяты из ',
+    generatedPrefix: (build: string) => `${build}: рецепты и названия взяты из `,
     generatedCommit: ' (коммит ',
     generatedDate: (date: string) => `), обновлено ${date}.`,
     basedOnPrefix: 'Основано на ',
