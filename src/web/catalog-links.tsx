@@ -100,14 +100,17 @@ export const RelatedBody = ({ kind, related, alternative = false }: { kind: Reso
     {kind === 'reagent' && related.extractions.length > 0 && <ul>{related.extractions.map((e, i) => <li key={i}><Link to={links.entity(e.entity.id)}><CatalogIcon id={e.entity.id}/>{e.entity.name}</Link> — {e.method === 'juice' ? (ru ? 'выжать сок' : 'juice') : (ru ? 'измельчить' : 'grind')}, {e.amount} u</li>)}</ul>}
     {kind === 'entity' && related.extractions.length > 0 && <section className='processing-methods'>
       <h3>{ru ? 'Переработка' : 'Processing'}</h3>
-      {(['grind', 'juice'] as const).map(method => {
+      <div className='processing-options'>{(['grind', 'juice'] as const).map(method => {
         const outputs = related.extractions.filter(e => e.method === method);
         if (!outputs.length) return null;
-        return <section className='processing-method' key={method}>
-          <h4>{method === 'grind' ? (ru ? 'Измельчить' : 'Grind') : (ru ? 'Выжать сок' : 'Juice')}</h4>
-          <ul>{outputs.map((e, i) => <li key={`${e.reagent.id}:${i}`}><ResourceLink kind='reagent' id={e.reagent.id}>{e.reagent.name}</ResourceLink> — <strong>{e.amount} u</strong></li>)}</ul>
+        return <section className={`processing-method processing-method--${method}`} key={method}>
+          <h4><span className='processing-action-icon' aria-hidden='true'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.7' strokeLinecap='round' strokeLinejoin='round'>
+            {method === 'grind' ? <><path d='M5 3h14l-2 12H7L5 3zm2 12h10l2 6H5l2-6zM9 7l6 4m0-4-6 4'/><circle cx='12' cy='18' r='.7'/></> : <><path d='M12 3s-7 8-7 12a7 7 0 0 0 14 0c0-4-7-12-7-12z'/><path d='M9 14c-1 2 0 4 2 4'/></>}
+          </svg></span>{method === 'grind' ? (ru ? 'Измельчить' : 'Grind') : (ru ? 'Выжать сок' : 'Juice')}</h4>
+          <div className='processing-output-label'>{ru ? 'На выходе' : 'Output'}</div>
+          <ul className='processing-outputs' role='list'>{outputs.map((e, i) => <li key={`${e.reagent.id}:${i}`}><ResourceLink kind='reagent' id={e.reagent.id}>{e.reagent.name}</ResourceLink><strong className='processing-amount'>{e.amount}<span> u</span></strong></li>)}</ul>
         </section>;
-      })}
+      })}</div>
     </section>}
     {(related.uses.length > 0 || related.reactions.length > 0 || related.combinations.length > 0) && <h3>{ru ? 'Где используется' : 'Used in'}</h3>}
     {related.uses.length > 0 && list(related.uses)}

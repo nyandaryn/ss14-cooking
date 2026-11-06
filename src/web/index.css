@@ -2860,6 +2860,19 @@ select {
 .popup_recipe > .catalog-card > .plant-effects:only-child { margin-block: 0; padding-top: 0; border-top: 0; }
 .chemical-card > .extraction-recipes { border-top: 1px solid var(--bg-level-2); margin-top: 1rem; }
 .popup_recipe .extraction-recipes > h3:first-child { margin-top: 0; }
-.processing-method { margin-block: .65rem; }
-.processing-method > h4 { font-size: .85rem; margin: 0; }
-.processing-method + .processing-method { border-top: 1px solid var(--bg-level-2); padding-top: .65rem; }
+
+.processing-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); align-items: start; gap: 12px; margin-block: 10px; }
+.processing-method { --processing-accent: #eac27c; min-width: 0; padding: 12px; border: 1px solid var(--bg-level-2); border-top: 3px solid var(--processing-accent); border-radius: 6px; background: var(--bg-level-0); }
+.processing-method--juice { --processing-accent: #80d3d4; }
+.processing-method > h4 { display: flex; align-items: center; gap: 9px; margin: 0; font-size: .95rem; color: var(--processing-accent); }
+.processing-action-icon { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 5px; background: var(--bg-level-1); flex-shrink: 0; }
+.processing-action-icon svg { width: 23px; height: 23px; }
+.processing-output-label { margin-block: 12px 5px; font-size: .7rem; color: var(--fg-subtle); }
+.processing-method .processing-outputs { list-style: none; margin: 0; padding: 0; }
+.processing-method .processing-outputs > li { display: flex; align-items: baseline; gap: 10px; margin: 0; padding: 8px 0; }
+.processing-outputs > li + li { border-top: 1px solid var(--bg-level-2); }
+.processing-outputs > li > a { min-width: 0; flex: 1; line-height: 1.45; }
+.processing-amount { flex-shrink: 0; min-width: 3.2em; padding: 3px 7px; border-radius: 4px; text-align: right; background: var(--bg-level-1); color: var(--processing-accent); font-variant-numeric: tabular-nums; }
+.processing-amount > span { font-size: .75em; font-weight: normal; }
+.theme-light .processing-method { --processing-accent: #805209; }
+.theme-light .processing-method--juice { --processing-accent: #17646b; }
