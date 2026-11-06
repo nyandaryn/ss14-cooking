@@ -2856,3 +2856,5 @@ select {
 .catalog-card .catalog-card { padding: .6rem; }
 .catalog-card > :is(h2, h3, h4):first-child { margin-top: 0; }
 .catalog-card > :last-child { margin-bottom: 0; }
+.plant-effects > .medicine-effects-heading:first-child { margin-top: 0; }
+.popup_recipe > .catalog-card > .plant-effects:only-child { margin-block: 0; padding-top: 0; border-top: 0; }

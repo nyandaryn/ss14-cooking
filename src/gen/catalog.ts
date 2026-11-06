@@ -94,6 +94,7 @@ export const buildCatalog = (
   };
   const reagents = Array.from(raw.reagents.values()).filter(r => !r.abstract).map(r => ({
     ...reagentRef(r.id), color: String(inherited(r.id, 'color') ?? '#ffffff'), group: String(inherited(r.id, 'group') ?? ''),
+    plantMetabolism: (inherited(r.id, 'plantMetabolism') ?? []) as Record<string, unknown>[],
     metabolisms: Object.entries(metabolisms(r.id)).map(([stage, m]) => ({ stage, rate: m.metabolismRate ?? 0.5, effects: m.effects ?? [] })),
     description: translate(typeof r.desc === 'string' ? r.desc : undefined) ?? '',
   }));

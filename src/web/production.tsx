@@ -1,3 +1,4 @@
+import { PlantEffects } from './plant-effects';
 import { CatalogIcon } from './sprites/catalog';
 import { EntitySprite } from './sprites';
 import { uniqueVendors } from './related-resources';
@@ -26,6 +27,7 @@ export const ManufacturingCard = ({ recipe: r, machineId }: { recipe: Manufactur
     <ul>{(machine ? [machine] : r.machines).map((m,i) => <li key={i}><MachineIcon id={m.machine.id}/> {m.machine.name} — {m.access === 'emagResearch' ? (ru ? 'эмаг и разблокировка рецепта' : 'emag and recipe unlock required') : m.access === 'emag' ? (ru ? 'после взлома (эмаг)' : 'emag required') : m.access === 'research' ? (ru ? 'нужно разблокировать рецепт' : 'recipe unlock required') : (ru ? 'доступен сразу' : 'available by default')}{!machine && m.materialMultiplier !== 1 && ` · ${ru ? 'материалы' : 'materials'} ×${m.materialMultiplier}`}{!machine && m.timeMultiplier !== 1 && ` · ${ru ? 'время' : 'time'} ×${m.timeMultiplier}`}</li>)}</ul>
     {r.technologies.length > 0 && <p>{ru ? 'Исследования для разблокировки' : 'Unlocking technologies'}: {r.technologies.map(t => t.name).join(', ')}</p>}
     {r.reagentResults?.map(p => <p key={p.reagent.id}><ResourceLink kind='reagent' id={p.reagent.id}>{p.reagent.name}</ResourceLink>: {p.amount} u</p>)}
+    {r.reagentResults?.map(p => <PlantEffects key={p.reagent.id} id={p.reagent.id}/>)}
     {r.entityResult && <ResourceLink kind='entity' id={r.result.id}>{ru ? 'Предмет и использование →' : 'Item and uses →'}</ResourceLink>}
   </article>;
 };

@@ -1,3 +1,4 @@
+import { PlantEffects } from '../plant-effects';
 import { MedicineEffects } from '../medicine-effects';
 import { ManufacturingCard } from '../production';
 import { ReactionCard } from '../chemical-reaction';
@@ -73,6 +74,7 @@ export const ReagentInfoPopup = ({
 
   const popupContent = useMemo(() => popup.open ? (
     <div className='popup_recipe'>
+      {!catalog.manufacturing?.some(r => r.reagentResults?.some(p => p.reagent.id === reagentId)) && catalog.reagents.find(r => r.id === reagentId)?.plantMetabolism?.length ? <article className='catalog-card'><PlantEffects id={reagentId}/></article> : null}
       {recipes?.map(renderRecipe)}
       {catalog.manufacturing?.filter(r => r.reagentResults?.some(p => p.reagent.id === reagentId)).map(r => <ManufacturingCard key={r.id} recipe={r}/>)}
       {catalog.reactions.filter(r => r.products.some(p => p.reagent.id === reagentId) && !recipes?.includes(`r!${r.id}`)).map(r => <article className='catalog-card' key={r.id}>

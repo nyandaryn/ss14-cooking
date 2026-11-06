@@ -1,3 +1,4 @@
+import { PlantEffects } from './plant-effects';
 import { MedicineEffects } from './medicine-effects';
 import { groupMedicines, medicineGroups } from './medicine-groups';
 import { CatalogIcon } from './sprites/catalog';
@@ -156,6 +157,7 @@ const Chemistry = ({ department }: { department: 'medicine' | 'botanical' | 'dri
       <div className='catalog-card-heading'><div><h2><ResourceLink kind='reagent' id={r.id}>{r.name}</ResourceLink></h2><span className='catalog-id'>{r.id}</span></div></div>
       {r.description && <p>{r.description}</p>}
       {department === 'medicine' && <MedicineEffects reagent={r}/>}
+      <PlantEffects id={r.id}/>
       {recipes.length ? recipes.map(recipe => <ReactionCard key={recipe.id} reaction={recipe}/>) : <p className='catalog-note'>{text('Рецепт синтеза в сборке не найден. Реагент может быть доступен из раздатчика, добычи или других источников.', 'No synthesis recipe found in this build. It may come from a dispenser, extraction or other sources.')}</p>}
       <RelatedResources kind='reagent' id={id}/>
     </article>;

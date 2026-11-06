@@ -1,5 +1,6 @@
 type Data = Record<string, unknown>;
 const labels: Record<string, string> = {
+  PlantAdjustHealth: 'Здоровье растения', PlantAdjustNutrition: 'Питание', PlantAdjustWater: 'Вода', PlantAdjustToxins: 'Токсины', PlantAdjustPests: 'Вредители', PlantAdjustWeeds: 'Сорняки', PlantAdjustPotency: 'Потенция', PlantAdjustMutationLevel: 'Уровень мутации', PlantAdjustMutationMod: 'Модификатор мутаций', PlantAffectGrowth: 'Рост', PlantChangeTraits: 'Изменение свойств растения', trait: 'свойство', PlantTraitUnviable: 'Нежизнеспособность', PlantTraitKudzu: 'Кудзу', minScale: 'минимальный масштаб применения',
   Blunt: 'Ушибы', Slash: 'Порезы', Piercing: 'Уколы', Brute: 'Механический урон', Burn: 'Термический урон', Heat: 'Тепловой урон', Cold: 'Холод', Shock: 'Электрический урон', Caustic: 'Кислотный урон', Poison: 'Яды', Radiation: 'Радиация', Asphyxiation: 'Удушье', Airloss: 'Кислородное голодание', Bloodloss: 'Кровопотеря', Cellular: 'Клеточный урон', Mangleness: 'Повреждение тканей',
   ModifyBleed: 'Изменение кровотечения', ModifyBloodLevel: 'Изменение уровня крови', EyeDamage: 'Повреждение глаз', Jitter: 'Дрожь', Vomit: 'Рвота', Drunk: 'Опьянение', Extinguish: 'Тушение огня', Ignite: 'Воспламенение', Flammable: 'Горючесть', CureZombieInfection: 'Лечение зомби-инфекции', ReduceRotting: 'Замедление гниения', MakeSentient: 'Развитие разума', ResetNarcolepsy: 'Сброс нарколепсии', Satiate: 'Насыщение', MovementSpeedModifier: 'Изменение скорости', Electrocute: 'Удар током', DeconvertCultist: 'Снятие влияния культа', ModifyKnockdown: 'Изменение времени падения', Emote: 'Эмоция', PopupMessage: 'Сообщение',
   amount: 'количество', time: 'время (с)', duration: 'длительность (с)', min: 'минимум', max: 'максимум', type: 'действие', key: 'статус', effectProto: 'эффект', walkSpeedModifier: 'скорость ходьбы', sprintSpeedModifier: 'скорость бега', refresh: 'обновление', conditions: 'условия', inverted: 'инверсия',
@@ -11,7 +12,16 @@ export function describeEffect(effect: Data, ru: boolean, reagentName: (id: stri
   const value = (v: unknown): string => Array.isArray(v) ? v.map(value).join(', ') : v && typeof v === 'object' ? Object.entries(v).map(([k, v]) => `${label(k)}: ${value(v)}`).join('; ') : label(v);
   const type = String(effect['!type'] ?? 'Effect');
   let result: string;
-  if (['HealthChange', 'EvenHealthChange', 'DistributedHealthChange'].includes(type)) {
+  if (type.startsWith('PlantAdjust') || type === 'PlantAffectGrowth') {
+    const amount = Number(effect.amount ?? 1);
+    result = `${label(type)}: ${amount > 0 ? '+' : ''}${amount}`;
+  } else if (type === 'PlantRestoreSeeds') {
+    result = ru ? 'Восстанавливает способность давать семена' : 'Restores seed production';
+  } else if (type === 'PlantCryoxadone') {
+    result = ru ? 'Омолаживает растение и сбрасывает прогресс урожая' : 'Rejuvenates the plant and resets harvest progress';
+  } else if (type === 'PlantDiethylamine') {
+    result = ru ? 'Увеличивает срок жизни на 1 и выносливость на 1 (отдельный шанс 10% для каждого)' : 'Increases lifespan by 1 and endurance by 1 (independent 10% chance each)';
+  } else if (['HealthChange', 'EvenHealthChange', 'DistributedHealthChange'].includes(type)) {
     const damage = (effect.damage ?? {}) as Data;
     const entries = type === 'EvenHealthChange' ? Object.entries(damage) : [...Object.entries((damage.types ?? {}) as Data), ...Object.entries((damage.groups ?? {}) as Data)];
     result = entries.filter(([, n]) => Number(n) !== 0).map(([kind, n]) => `${Number(n) < 0 ? (ru ? 'Лечит' : 'Heals') : (ru ? 'Наносит' : 'Deals')} ${Math.abs(Number(n))} — ${label(kind)}`).join('; ');

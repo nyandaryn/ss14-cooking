@@ -64,3 +64,19 @@ test('Overdose rows share a threshold heading, sort numerically, and retain per-
   const capped = effectRows({ '!type': 'Vomit', conditions: [{ '!type': 'ReagentCondition', reagent: 'Drug', min: 15, max: 25 }] }, 'Drug', true, id => id);
   assert.equal(groupEffectRows([...rows, ...capped]).overdoses.length, 3);
 });
+test('Plant effect values use plant semantics and retain mutation probabilities', () => {
+  assert.equal(describeEffect({ '!type': 'PlantAdjustNutrition', amount: 2 }, true), 'Питание: +2');
+  assert.equal(describeEffect({ '!type': 'PlantAdjustHealth', amount: -0.5 }, true), 'Здоровье растения: -0.5');
+  assert.match(describeEffect({ '!type': 'PlantAdjustMutationMod', amount: 0.4, probability: 0.3 }, true), /\+0.4.*30%/);
+});
+for (const fork of index) test(`${fork.id}: plant metabolism is available for biogenerator products and medicine`, () => {
+  const { catalog } = JSON.parse(readFileSync(new URL(`../public/data/data_${fork.id}.en.${fork.hashes.en}.json`, import.meta.url)));
+  const effects = id => catalog.reagents.find(r => r.id === id).plantMetabolism;
+  assert.ok(effects('EZNutrient').some(e => e['!type'] === 'PlantAdjustNutrition' && e.amount === 2));
+  assert.ok(effects('Ammonia').some(e => e['!type'] === 'PlantAdjustHealth' && e.amount === 0.5));
+  assert.ok(effects('Cryoxadone').some(e => e['!type'] === 'PlantCryoxadone'));
+  for (const r of catalog.reagents) for (const e of r.plantMetabolism ?? []) {
+    assert.ok(e['!type'], `${r.id}: plant effect type missing`);
+    assert.ok(!/NaN|undefined/.test(describeEffect(e, true)), r.id);
+  }
+});

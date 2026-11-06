@@ -50,7 +50,7 @@ export const ResourceLink = ({ id, kind, children }: { id: string; kind: 'entity
   const recipes = data.recipeList.filter(r => kind === 'entity' ? r.solidResult === id : r.reagentResult === id).map(r => r.id);
   let preview;
   if (kind === 'reagent') {
-    const hasSources = recipes.length || data.catalog.reactions.some(r => r.products.some(p => p.reagent.id === id)) || data.catalog.extractions.some(e => e.reagent.id === id) || data.catalog.manufacturing.some(r => r.reagentResults.some(p => p.reagent.id === id));
+    const hasSources = data.catalog.reagents.find(r => r.id === id)?.plantMetabolism?.length || recipes.length || data.catalog.reactions.some(r => r.products.some(p => p.reagent.id === id)) || data.catalog.extractions.some(e => e.reagent.id === id) || data.catalog.manufacturing.some(r => r.reagentResults.some(p => p.reagent.id === id));
     if (!hasSources) return link;
     preview = <ReagentInfoPopup reagentId={id} recipes={recipes} sources={[]}>{link}</ReagentInfoPopup>;
   } else if (recipes.length) {

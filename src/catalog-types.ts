@@ -1,7 +1,7 @@
 /** Localized reference, also used for prototypes outside the cooking sprite sheet. */
 export interface CatalogRef { id: string; name: string }
 export interface ReagentMetabolism { stage: string; rate: number; effects: Record<string, unknown>[] }
-export interface CatalogReagent extends CatalogRef { description: string; color: string; group: string; metabolisms?: ReagentMetabolism[] }
+export interface CatalogReagent extends CatalogRef { description: string; color: string; group: string; metabolisms?: ReagentMetabolism[]; plantMetabolism?: Record<string, unknown>[] }
 export interface PlantEntry extends CatalogRef {
   products: CatalogRef[];
   mutations: CatalogRef[];
