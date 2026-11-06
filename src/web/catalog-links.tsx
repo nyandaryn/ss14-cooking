@@ -98,7 +98,17 @@ export const RelatedBody = ({ kind, related, alternative = false }: { kind: Reso
     {related.sources.length > 0 && list(related.sources, true)}
     {related.plants.length > 0 && <ul>{related.plants.map(p => <li key={p.id}><Link to={links.plant(p.id)}>{p.name}</Link> — {ru ? 'ботаника' : 'botany'}</li>)}</ul>}
     {kind === 'reagent' && related.extractions.length > 0 && <ul>{related.extractions.map((e, i) => <li key={i}><Link to={links.entity(e.entity.id)}><CatalogIcon id={e.entity.id}/>{e.entity.name}</Link> — {e.method === 'juice' ? (ru ? 'выжать сок' : 'juice') : (ru ? 'измельчить' : 'grind')}, {e.amount} u</li>)}</ul>}
-    {kind === 'entity' && related.extractions.length > 0 && <><h3>{ru ? 'Переработка' : 'Processing'}</h3><ul>{related.extractions.map((e, i) => <li key={i}><Link to={links.reagent(e.reagent.id)}><CatalogIcon kind='reagent' id={e.reagent.id}/>{e.reagent.name}</Link> — {e.method === 'juice' ? (ru ? 'выжать сок' : 'juice') : (ru ? 'измельчить' : 'grind')}, {e.amount} u</li>)}</ul></>}
+    {kind === 'entity' && related.extractions.length > 0 && <section className='processing-methods'>
+      <h3>{ru ? 'Переработка' : 'Processing'}</h3>
+      {(['grind', 'juice'] as const).map(method => {
+        const outputs = related.extractions.filter(e => e.method === method);
+        if (!outputs.length) return null;
+        return <section className='processing-method' key={method}>
+          <h4>{method === 'grind' ? (ru ? 'Измельчить' : 'Grind') : (ru ? 'Выжать сок' : 'Juice')}</h4>
+          <ul>{outputs.map((e, i) => <li key={`${e.reagent.id}:${i}`}><ResourceLink kind='reagent' id={e.reagent.id}>{e.reagent.name}</ResourceLink> — <strong>{e.amount} u</strong></li>)}</ul>
+        </section>;
+      })}
+    </section>}
     {(related.uses.length > 0 || related.reactions.length > 0 || related.combinations.length > 0) && <h3>{ru ? 'Где используется' : 'Used in'}</h3>}
     {related.uses.length > 0 && list(related.uses)}
     {related.reactions.map(r => <ReactionCard key={r.id} reaction={r}/>)}
