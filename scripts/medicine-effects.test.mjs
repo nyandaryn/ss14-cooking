@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import ts from 'typescript';
 const source = readFileSync(new URL('../src/web/effect-description.ts', import.meta.url), 'utf8');
 const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
-const { describeEffect } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
+const { describeEffect, effectRows } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
 test('Healing and harm preserve amounts, conditions, and probability', () => {
   const result = describeEffect({ '!type': 'HealthChange', damage: { types: { Piercing: -4, Blunt: 1 } }, conditions: [{ '!type': 'ReagentCondition', reagent: 'Drug', min: 20 }], probability: 0.2 }, true, () => 'Препарат');
   for (const part of ['Лечит 4', 'Наносит 1', 'Препарат: ≥ 20 u', '20%']) assert.ok(result.includes(part), result);
@@ -34,4 +34,21 @@ for (const fork of index) test(`${fork.id}: generated medicine effects retain so
 test('Status defaults follow the game: update for two seconds', () => {
   assert.match(describeEffect({ '!type': 'ModifyStatusEffect', effectProto: 'StatusEffectDrowsiness' }, true), /Сонливость; Обновить, 2 с/);
   assert.ok(!describeEffect({ '!type': 'HealthChange', damage: { types: { Radiation: 0, Piercing: -2.5 } } }, true).includes('Радиация'));
+});
+
+test('Mixed effects separate healing from damage and retain overdose thresholds', () => {
+  const rows = effectRows({ '!type': 'HealthChange', damage: { types: { Piercing: -2.5, Blunt: 3, Radiation: 0 } }, conditions: [{ '!type': 'ReagentCondition', reagent: 'Drug', min: 12 }], probability: 0.5 }, 'Drug', true, () => 'Препарат');
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].tone, 'heal');
+  assert.equal(rows[0].overdose, false);
+  assert.equal(rows[1].tone, 'harm');
+  assert.equal(rows[1].overdose, true);
+  for (const row of rows) { assert.match(row.conditions, /≥ 12 u/); assert.match(row.conditions, /50%/); }
+});
+test('Temperature and other-reagent requirements are not labelled overdose', () => {
+  for (const condition of [{ '!type': 'TemperatureCondition', max: 273.15 }, { '!type': 'ReagentCondition', reagent: 'Other', min: 5 }, { '!type': 'ReagentCondition', reagent: 'Drug', min: 5, inverted: true }]) {
+    const [row] = effectRows({ '!type': 'HealthChange', damage: { types: { Poison: 1 } }, conditions: [condition] }, 'Drug', false, id => id);
+    assert.equal(row.overdose, false);
+    assert.ok(row.conditions);
+  }
 });

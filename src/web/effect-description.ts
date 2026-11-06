@@ -1,6 +1,6 @@
 type Data = Record<string, unknown>;
 const labels: Record<string, string> = {
-  Blunt: 'Ушибы', Slash: 'Порезы', Piercing: 'Уколы', Brute: 'Механический урон', Burn: 'Термический урон', Heat: 'Тепловой урон', Cold: 'Холод', Shock: 'Электрический урон', Caustic: 'Кислотный урон', Poison: 'Яды', Radiation: 'Радиация', Asphyxiation: 'Удушье', Bloodloss: 'Кровопотеря', Cellular: 'Клеточный урон', Mangleness: 'Повреждение тканей',
+  Blunt: 'Ушибы', Slash: 'Порезы', Piercing: 'Уколы', Brute: 'Механический урон', Burn: 'Термический урон', Heat: 'Тепловой урон', Cold: 'Холод', Shock: 'Электрический урон', Caustic: 'Кислотный урон', Poison: 'Яды', Radiation: 'Радиация', Asphyxiation: 'Удушье', Airloss: 'Кислородное голодание', Bloodloss: 'Кровопотеря', Cellular: 'Клеточный урон', Mangleness: 'Повреждение тканей',
   ModifyBleed: 'Изменение кровотечения', ModifyBloodLevel: 'Изменение уровня крови', EyeDamage: 'Повреждение глаз', Jitter: 'Дрожь', Vomit: 'Рвота', Drunk: 'Опьянение', Extinguish: 'Тушение огня', Ignite: 'Воспламенение', Flammable: 'Горючесть', CureZombieInfection: 'Лечение зомби-инфекции', ReduceRotting: 'Замедление гниения', MakeSentient: 'Развитие разума', ResetNarcolepsy: 'Сброс нарколепсии', Satiate: 'Насыщение', MovementSpeedModifier: 'Изменение скорости', Electrocute: 'Удар током', DeconvertCultist: 'Снятие влияния культа', ModifyKnockdown: 'Изменение времени падения', Emote: 'Эмоция', PopupMessage: 'Сообщение',
   amount: 'количество', time: 'время (с)', duration: 'длительность (с)', min: 'минимум', max: 'максимум', type: 'действие', key: 'статус', effectProto: 'эффект', walkSpeedModifier: 'скорость ходьбы', sprintSpeedModifier: 'скорость бега', refresh: 'обновление', conditions: 'условия', inverted: 'инверсия',
   Muted: 'Немота', ForcedSleeping: 'Принудительный сон', SeeingRainbow: 'Радужное зрение', PressureImmunity: 'Защита от давления', Stutter: 'Заикание', Paralyzed: 'Паралич', Adrenaline: 'Адреналин', Drowsiness: 'Сонливость', StimulantsStamina: 'Стимуляция выносливости', PainNumbness: 'Подавление боли', Stunned: 'Оглушение', Hemorrhage: 'Кровотечение', DesoxyStamina: 'Стимуляция выносливости дезоксиэфедрином', Pacified: 'Умиротворение', Blindness: 'Слепота', NightVision: 'Ночное зрение', Scrambled: 'Спутанность восприятия', Woozy: 'Головокружение', RadiationProtection: 'Защита от радиации', Anticoagulant: 'Антикоагуляция', Frail: 'Хрупкость', satiationType: 'тип насыщения', Thirst: 'Жажда', Hunger: 'Голод', Nutrition: 'Питание', factor: 'множитель', seconds: 'секунды', electrocuteTime: 'длительность удара током (с)',
@@ -16,6 +16,9 @@ export function describeEffect(effect: Data, ru: boolean, reagentName: (id: stri
     const entries = type === 'EvenHealthChange' ? Object.entries(damage) : [...Object.entries((damage.types ?? {}) as Data), ...Object.entries((damage.groups ?? {}) as Data)];
     result = entries.filter(([, n]) => Number(n) !== 0).map(([kind, n]) => `${Number(n) < 0 ? (ru ? 'Лечит' : 'Heals') : (ru ? 'Наносит' : 'Deals')} ${Math.abs(Number(n))} — ${label(kind)}`).join('; ');
     if (type === 'EvenHealthChange' || damage.groups) result += ru ? ' (суммарно по группе, распределяется между типами)' : ' (total for the group, distributed across damage types)';
+  } else if (type === 'ModifyBleed' || type === 'ModifyBloodLevel') {
+    const amount = Number(effect.amount);
+    result = `${amount < 0 ? (ru ? 'Уменьшает' : 'Decreases') : (ru ? 'Увеличивает' : 'Increases')} ${type === 'ModifyBleed' ? (ru ? 'кровотечение' : 'bleeding') : (ru ? 'уровень крови' : 'blood level')} ${ru ? 'на' : 'by'} ${Math.abs(amount)}`;
   } else if (type === 'AdjustReagent') {
     result = `${Number(effect.amount) < 0 ? (ru ? 'Выводит' : 'Removes') : (ru ? 'Добавляет' : 'Adds')} ${Math.abs(Number(effect.amount))} u ${reagentName(String(effect.reagent))}`;
   } else if (type === 'AdjustTemperature') {
@@ -38,4 +41,29 @@ export function describeEffect(effect: Data, ru: boolean, reagentName: (id: stri
   }).join(ru ? ' И ' : ' AND ');
   if (effect.probability != null && Number(effect.probability) !== 1) result += ` (${ru ? 'вероятность' : 'chance'} ${Number((Number(effect.probability) * 100).toFixed(4))}%)`;
   return result;
+}
+
+/** Split mixed healing/harm into individually styled rows without losing conditions. */
+export function effectRows(effect: Data, reagentId: string, ru: boolean, name: (id: string) => string) {
+  const type = String(effect['!type']);
+  const damage = (effect.damage ?? {}) as Data;
+  const health = ['HealthChange', 'EvenHealthChange', 'DistributedHealthChange'].includes(type);
+  const parts: Data[] = health
+    ? (type === 'EvenHealthChange'
+      ? Object.entries(damage).map(([key, amount]) => ({ ...effect, damage: { [key]: amount } }))
+      : ['types', 'groups'].flatMap(group => Object.entries((damage[group] ?? {}) as Data).map(([key, amount]) => ({ ...effect, damage: { [group]: { [key]: amount } } }))))
+    : [effect];
+  return parts.flatMap(part => {
+    const d = (part.damage ?? {}) as Data;
+    const amount = health ? Number(Object.values(type === 'EvenHealthChange' ? d : (d.types ?? d.groups ?? {}) as Data)[0]) : Number(part.amount);
+    if (health && (!Number.isFinite(amount) || amount === 0)) return [];
+    const harmful = health ? amount > 0 : ['Vomit', 'Jitter', 'Drunk', 'Ignite', 'Electrocute'].includes(type) || (type === 'ModifyBleed' && amount > 0) || (type === 'ModifyBloodLevel' && amount < 0);
+    const healing = (health && amount < 0) || (type === 'ModifyBleed' && amount < 0) || (type === 'ModifyBloodLevel' && amount > 0);
+    const tone = harmful ? 'harm' : healing ? 'heal' : 'neutral';
+    const icon = health ? (healing ? 'heal' : 'harm') : ['ModifyBleed', 'ModifyBloodLevel'].includes(type) ? 'blood' : type === 'AdjustTemperature' ? 'temperature' : harmful ? 'harm' : 'status';
+    const overdose = harmful && ((part.conditions ?? []) as Data[]).some(c => c['!type'] === 'ReagentCondition' && c.reagent === reagentId && Number(c.min) > 0 && !c.inverted);
+    const text = describeEffect({ ...part, conditions: [], probability: 1 }, ru, name);
+    const conditions = describeEffect(part, ru, name).slice(text.length).replace(/^ — /, '').trim();
+    return [{ text, conditions, tone, icon, overdose }];
+  });
 }
