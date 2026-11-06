@@ -2827,14 +2827,14 @@ select {
 .medicine-effect-content { min-width: 0; }
 .medicine-effect-description { color: var(--effect-color); line-height: 1.5; }
 .medicine-effect-condition { margin-top: 6px; font-size: .85rem; line-height: 1.5; color: var(--fg-subtle); }
-.medicine-effect-condition--overdose { color: #ffc276; border-top: 1px solid #806339; padding-top: 6px; }
-.medicine-effect-condition--overdose > .medicine-effect-icon { display: inline-block; vertical-align: text-bottom; margin: 0 5px 0 0; color: inherit; width: 16px; height: 16px; }
-.medicine-effect-condition--overdose > span { display: block; }
 .theme-light .medicine-effect { --effect-color: #245b86; }
 .theme-light .medicine-effect--heal { --effect-color: #216536; }
 .theme-light .medicine-effect--harm { --effect-color: #a32430; }
-.theme-light .medicine-effect-condition--overdose { color: #854b00; }
 .medicine-effects-heading { display: flex; align-items: center; gap: 8px; }
 .medicine-effects-help { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 32px; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 4px; color: var(--fg-subtle); background: transparent; box-shadow: none; }
 .medicine-effects-help .medicine-effect-icon { margin: 0; color: inherit; }
 .medicine-effects-help:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+.medicine-overdose-group { margin-top: 16px; border-top: 1px solid #806339; padding-top: 10px; }
+.medicine-overdose-group > h5 { display: flex; align-items: center; gap: 7px; margin: 0; font-size: .85rem; line-height: 1.5; color: #ffc276; }
+.medicine-overdose-group > h5 .medicine-effect-icon { margin: 0; color: inherit; }
+.theme-light .medicine-overdose-group > h5 { color: #854b00; }

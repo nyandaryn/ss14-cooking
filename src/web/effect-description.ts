@@ -61,9 +61,26 @@ export function effectRows(effect: Data, reagentId: string, ru: boolean, name: (
     const healing = (health && amount < 0) || (type === 'ModifyBleed' && amount < 0) || (type === 'ModifyBloodLevel' && amount > 0);
     const tone = harmful ? 'harm' : healing ? 'heal' : 'neutral';
     const icon = health ? (healing ? 'heal' : 'harm') : ['ModifyBleed', 'ModifyBloodLevel'].includes(type) ? 'blood' : type === 'AdjustTemperature' ? 'temperature' : harmful ? 'harm' : 'status';
-    const overdose = harmful && ((part.conditions ?? []) as Data[]).some(c => c['!type'] === 'ReagentCondition' && c.reagent === reagentId && Number(c.min) > 0 && !c.inverted);
+    const allConditions = (part.conditions ?? []) as Data[];
+    const threshold = harmful ? allConditions.find(c => c['!type'] === 'ReagentCondition' && c.reagent === reagentId && Number(c.min) > 0 && !c.inverted) : undefined;
+    const overdose = Boolean(threshold);
+    const range = threshold ? { min: Number(threshold.min), max: threshold.max == null ? null : Number(threshold.max) } : null;
     const text = describeEffect({ ...part, conditions: [], probability: 1 }, ru, name);
     const conditions = describeEffect(part, ru, name).slice(text.length).replace(/^ — /, '').trim();
-    return [{ text, conditions, tone, icon, overdose }];
+    const detailConditions = describeEffect({ ...part, conditions: allConditions.filter(c => c !== threshold) }, ru, name).slice(text.length).replace(/^ — /, '').trim();
+    return [{ text, conditions, detailConditions, tone, icon, overdose, range }];
   });
+}
+
+export function groupEffectRows(rows: ReturnType<typeof effectRows>) {
+  const normal = rows.filter(row => !row.range);
+  const byRange = new Map<string, { min: number; max: number | null; rows: typeof rows }>();
+  for (const row of rows) {
+    if (!row.range) continue;
+    const key = JSON.stringify(row.range);
+    const group = byRange.get(key) ?? { ...row.range, rows: [] };
+    group.rows.push(row);
+    byRange.set(key, group);
+  }
+  return { normal, overdoses: [...byRange.values()].sort((a, b) => a.min - b.min || (a.max ?? Infinity) - (b.max ?? Infinity)) };
 }

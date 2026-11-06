@@ -2,7 +2,7 @@ import { Tooltip } from './tooltip';
 import { CatalogReagent } from '../catalog-types';
 import { useLang } from './i18n';
 import { useGameData } from './context';
-import { effectRows } from './effect-description';
+import { effectRows, groupEffectRows } from './effect-description';
 
 export const MedicineEffects = ({ reagent }: { reagent: CatalogReagent }) => {
   const { lang } = useLang();
@@ -18,15 +18,7 @@ export const MedicineEffects = ({ reagent }: { reagent: CatalogReagent }) => {
     </h3>
     {reagent.metabolisms.filter(m => m.effects.length).map(m => <div key={m.stage}>
       <h4>{({ Bloodstream: ru ? 'В крови' : 'Bloodstream', Medicine: ru ? 'Лекарственный метаболизм' : 'Medicine metabolism', Poison: ru ? 'Токсины' : 'Poison', Food: ru ? 'Пищеварение' : 'Digestion', Drink: ru ? 'Питьё' : 'Drink' }[m.stage] ?? m.stage)} · {m.rate} u/{ru ? 'цикл' : 'cycle'}</h4>
-      <ul className='medicine-effect-list' role='list'>{m.effects.filter(e => !['PopupMessage', 'Emote'].includes(String(e['!type']))).flatMap(e => effectRows(e, reagent.id, ru, name)).map((row, i) => <li className={`medicine-effect medicine-effect--${row.tone}`} key={i}>
-        <EffectIcon kind={row.icon}/>
-        <div className='medicine-effect-content'><div className='medicine-effect-description'>{row.text}</div>
-          {row.conditions && <div className={`medicine-effect-condition${row.overdose ? ' medicine-effect-condition--overdose' : ''}`}>
-            {row.overdose && <><EffectIcon kind='warning'/><strong>{ru ? 'Передозировка' : 'Overdose'}</strong></>}
-            <span>{row.conditions}</span>
-          </div>}
-        </div>
-      </li>)}</ul>
+      <EffectGroups rows={m.effects.filter(e => !['PopupMessage', 'Emote'].includes(String(e['!type']))).flatMap(e => effectRows(e, reagent.id, ru, name))} ru={ru}/>
     </div>)}
   </section>;
 };
@@ -39,3 +31,20 @@ const EffectIcon = ({ kind }: { kind: string }) => <svg className='medicine-effe
     kind === 'warning' ? <><path d='M12 3 2 21h20z'/><path d='M12 9v5m0 3v.1'/></> :
     <><circle cx='12' cy='12' r='9'/><path d='M12 11v6m0-10v.1'/></>}
 </svg>;
+
+const EffectGroups = ({ rows, ru }: { rows: ReturnType<typeof effectRows>; ru: boolean }) => {
+  const { normal, overdoses } = groupEffectRows(rows);
+  const list = (items: typeof rows) => <ul className='medicine-effect-list' role='list'>{items.map((row, i) => <li className={`medicine-effect medicine-effect--${row.tone}`} key={i}>
+    <EffectIcon kind={row.icon}/><div className='medicine-effect-content'>
+      <div className='medicine-effect-description'>{row.text}</div>
+      {row.detailConditions && <div className='medicine-effect-condition'>{row.detailConditions}</div>}
+    </div>
+  </li>)}</ul>;
+  return <>
+    {normal.length > 0 && list(normal)}
+    {overdoses.map(group => <section className='medicine-overdose-group' key={`${group.min}:${group.max}`}>
+      <h5><EffectIcon kind='warning'/>{ru ? 'Передозировка' : 'Overdose'} · ≥ {group.min} u{group.max != null && `, ≤ ${group.max} u`}</h5>
+      {list(group.rows)}
+    </section>)}
+  </>;
+};

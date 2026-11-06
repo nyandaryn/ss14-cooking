@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import ts from 'typescript';
 const source = readFileSync(new URL('../src/web/effect-description.ts', import.meta.url), 'utf8');
 const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
-const { describeEffect, effectRows } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
+const { describeEffect, effectRows, groupEffectRows } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
 test('Healing and harm preserve amounts, conditions, and probability', () => {
   const result = describeEffect({ '!type': 'HealthChange', damage: { types: { Piercing: -4, Blunt: 1 } }, conditions: [{ '!type': 'ReagentCondition', reagent: 'Drug', min: 20 }], probability: 0.2 }, true, () => 'Препарат');
   for (const part of ['Лечит 4', 'Наносит 1', 'Препарат: ≥ 20 u', '20%']) assert.ok(result.includes(part), result);
@@ -51,4 +51,16 @@ test('Temperature and other-reagent requirements are not labelled overdose', () 
     assert.equal(row.overdose, false);
     assert.ok(row.conditions);
   }
+});
+
+test('Overdose rows share a threshold heading, sort numerically, and retain per-effect probability', () => {
+  const rows = [30, 15, 15].flatMap((min, i) => effectRows({ '!type': 'Vomit', probability: i === 0 ? 0.02 : 1, conditions: [{ '!type': 'ReagentCondition', reagent: 'Drug', min }, ...(i === 2 ? [{ '!type': 'TemperatureCondition', max: 273 }] : [])] }, 'Drug', true, id => id));
+  const { normal, overdoses } = groupEffectRows(rows);
+  assert.equal(normal.length, 0);
+  assert.deepEqual(overdoses.map(g => [g.min, g.rows.length]), [[15, 2], [30, 1]]);
+  assert.match(overdoses[1].rows[0].detailConditions, /2%/);
+  assert.match(overdoses[0].rows[1].detailConditions, /273 K/);
+  assert.ok(!overdoses[0].rows[0].detailConditions.includes('15'));
+  const capped = effectRows({ '!type': 'Vomit', conditions: [{ '!type': 'ReagentCondition', reagent: 'Drug', min: 15, max: 25 }] }, 'Drug', true, id => id);
+  assert.equal(groupEffectRows([...rows, ...capped]).overdoses.length, 3);
 });
