@@ -163,3 +163,91 @@ If there are any syntax errors in the notices file or if the file doesn't exist,
 ## Contributing
 
 If you find a bug that prevents the cookbook from working as expected, you may contribute a fix or open an issue. This repo is not currently accepting feature-level contributions (including, but not limited to, new functionality, radically altered functionality, tooling changes and refactors).
+
+### Department catalogs (Lust Station)
+
+The top navigation separates Cooking, Drinks (`/drinks`), Medicine (`/medicine`) and Botany
+(`/botany`). Medicine includes reagent synthesis and a separate Med-O-Mat view;
+medical assembler recipes no longer appear in Cooking. Botany includes plants
+and Botanical-group reagent recipes.
+
+The generator reads the same pinned checkout in `sources.yml`. Plant data comes
+from inherited `PlantData`, `Plant`, `PlantHarvest`, `PlantChemicals` and
+`PlantTraitLigneous` components. Cards show species mutations in both directions,
+produce, seed packets, harvest repetition/tool requirements, growth stats and
+chemical contents at base potency. Growth values are ticks, not seconds; live
+mutations, crossbreeding and tray modifiers can change them. Species mutation
+links are not a list of random trait mutations.
+
+Department membership follows the reagent's inherited game `group`. Abstract
+base reagents are excluded; Drinks includes children of BaseDrink/BaseAlcohol.
+Juicing and grinding sources are generated from resolved produce components. All reagent
+reactions are retained for ingredient navigation, including multi-product
+reactions, catalysts, temperature bounds and mixer requirements. Reagents
+without a synthesis reaction remain visible. Reactions with extra effects are
+marked; this catalog does not simulate metabolism or entity-spawning effects.
+
+Names use the existing English/Russian Fluent bundles. Department catalogs are
+embedded in the same hashed language data files, so the normal build/update
+pipeline also refreshes them. No separate manually maintained recipe list exists.
+
+After changing generator code, verify using:
+
+```sh
+npm run build
+npm run gen:recipes
+npm run test:catalog
+npx tsc --noEmit --skipLibCheck
+```
+
+`test:catalog` validates the generated Lust data in both languages, mutation and
+reagent references, harvest defaults, special tools, chemistry prerequisites,
+multi-product reactions, catalysts and heating. The existing dependency type
+errors in Jimp require `--skipLibCheck` when checking application code.
+
+### Search indexing and link previews
+
+`npm run gen:seo` generates static HTML catalogs for `/`, `/drinks`, `/medicine`, `/botany`
+and `/combinations` using the current generated Russian game data. The catalog
+is visible without JavaScript; React replaces it with the interactive application
+on load. Each page has its own title, description, canonical URL, Open Graph and
+Twitter Card metadata, and WebSite/CollectionPage/BreadcrumbList JSON-LD.
+This describes a game reference, not real-world medical or cooking instructions.
+
+The production origin and page descriptions live in `src/seo.json`. There are no
+`hreflang` alternates: language currently uses a user preference, not separate
+crawlable language URLs. Filters and selected entries canonicalize to their
+section. Personal menus and migration use `X-Robots-Tag: noindex, follow`.
+
+The same command generates `robots.txt`, `sitemap.xml` and a 1200×630 PNG link
+preview. It runs automatically after recipe generation and before deployment.
+For local SEO inspection after building, run `npm run gen:seo` and
+`npm run test:seo`. Existing game data must be generated first. Google Search
+Console/Yandex Webmaster verification and sitemap submission require the site
+owner's respective account; tags alone do not guarantee indexing or ranking.
+
+### Build selection
+
+The header's **Build / Сборка** selector offers **Lust Station** (default) and
+**WizDen**. `?fork=wizden` preserves the selection in links and across department
+navigation. Each build has its own generated recipes, chemical and plant catalogs,
+sprites, source commit and favorites/menu namespace. WizDen uses its official
+`en-US` locale; Russian interface controls remain available, while game names
+fall back to English because upstream has no `ru-RU` locale. Lust-only machinery
+such as Med-O-Mat is hidden for WizDen. `sources:update` retrieves the prototypes,
+locales and textures for both checkouts.
+
+Agent discovery: `gen:seo` also creates `/llms.txt` (Markdown) and
+`/.well-known/ard.json` (ARD entries referencing the generated JSON catalogs).
+Both are discoverable from HTML head links and regenerated before every deploy
+so their hashed dataset URLs stay current. These resources describe read-only
+game datasets, not an MCP server or executable agent. `test:seo` validates their
+structure and checks that every dataset link resolves to generated data.
+
+Cross-department navigation: ingredient/result links preserve the selected build.
+Chemical cards link to reagent recipes, plant cards link to produce, and
+`/reference?entity=...` lists sources, processing yields and recipe uses.
+Cooking/assembler recipes have stable `?recipe=...` links. Reverse references
+include chemical reactions, secondary construction outputs and food combinations;
+expandable source/use lists are mounted only when opened. Headers and catalog
+cards share the same responsive department styles.
