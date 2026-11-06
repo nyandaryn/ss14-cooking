@@ -12,9 +12,9 @@ import { Entity, Recipe as RecipeData } from '../../types';
 import { useGameData } from '../context';
 import { FavoriteButton, useIsFavorite } from '../favorites';
 import { useT } from '../i18n';
-import { CloseIcon, FoodSequenceIcon, NodeTreeIcon } from '../icons';
+import { FoodSequenceIcon, NodeTreeIcon } from '../icons';
 import { Popup, usePopupTrigger } from '../popup';
-import { useCurrentExploredRecipe, useExploreRecipe } from '../recipe-explorer';
+import { useExploreRecipe } from '../recipe-explorer';
 import { EntitySprite } from '../sprites';
 import { Tooltip } from '../tooltip';
 import { useUrl } from '../url';
@@ -221,22 +221,15 @@ interface ExploreButtonProps {
 
 const ExploreButton = memo(({ id }: ExploreButtonProps): ReactElement => {
   const explore = useExploreRecipe();
-  const currentRecipe = useCurrentExploredRecipe();
   const t = useT();
-
-  const isCurrent = id === currentRecipe;
 
   return (
     <Tooltip
-      text={
-        isCurrent
-          ? t.recipes.closeExplorer
-          : t.recipes.exploreRelated
-      }
+      text={t.recipes.exploreRelated}
       provideLabel
     >
       <button onClick={() => explore(id)}>
-        {isCurrent ? <CloseIcon/> : <NodeTreeIcon/>}
+        <NodeTreeIcon/>
       </button>
     </Tooltip>
   );

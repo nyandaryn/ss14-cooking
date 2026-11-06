@@ -38,7 +38,8 @@ export const RecipeExplorer = memo(({
   setRecipe,
 }: Props): ReactElement => {
   const exploreFn = useCallback<ExploreRecipeFn>((id: string) => {
-    setRecipe(prevId => id === prevId ? null : id);
+    // Selecting an already open recipe is idempotent; only Close dismisses it.
+    setRecipe(id);
   }, [setRecipe]);
 
   const mainRef = useRef<HTMLElement>(null);
@@ -94,7 +95,7 @@ export const RecipeExplorer = memo(({
           tabIndex={-1}
           ref={mainRef}
         >
-          <ExploredRecipe id={id} ref={recipeRef}/>
+          <ExploredRecipe key={id} id={id} ref={recipeRef}/>
 
           <Tooltip text={t.recipes.closeExplorer} placement='left' provideLabel>
             <button
