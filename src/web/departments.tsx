@@ -1,3 +1,4 @@
+import { ExtractionRecipes } from './extraction-recipes';
 import { PlantEffects } from './plant-effects';
 import { MedicineEffects } from './medicine-effects';
 import { groupMedicines, medicineGroups } from './medicine-groups';
@@ -144,9 +145,10 @@ const Chemistry = ({ department }: { department: 'medicine' | 'botanical' | 'dri
     for (const r of catalog.reactions) for (const p of r.products) result.set(p.reagent.id, [...result.get(p.reagent.id) ?? [], r]);
     return result;
   }, [catalog]);
+  const extractable = useMemo(() => new Set(catalog.extractions.map(e => e.reagent.id)), [catalog]);
   const roots = new Set(department === 'medicine' ? catalog.reagents.map(r => r.id) : catalog[department]);
   const query = normalizeSearchText(search);
-  const results = catalog.reagents.filter(r => roots.has(r.id) && (!onlyRecipes || byProduct.has(r.id)) && normalizeSearchText(`${r.id} ${r.name} ${r.description}`).includes(query)).sort((a, b) => a.name.localeCompare(b.name));
+  const results = catalog.reagents.filter(r => roots.has(r.id) && (!onlyRecipes || byProduct.has(r.id) || extractable.has(r.id)) && normalizeSearchText(`${r.id} ${r.name} ${r.description}`).includes(query)).sort((a, b) => a.name.localeCompare(b.name));
   const grouped = groupMedicines(results, medicineSection);
   const otherReactions = department === 'medicine' && (!medicineSection || medicineSection === 'other') ? catalog.reactions.filter(r => !r.products.length && normalizeSearchText([r.id, ...r.reactants.map(v => v.reagent.name)].join(' ')).includes(query)) : [];
   const visibleCount = department === 'medicine' ? grouped.reduce((n, g) => n + g.basicItems.length + g.advancedItems.length, 0) : results.length;
@@ -158,7 +160,9 @@ const Chemistry = ({ department }: { department: 'medicine' | 'botanical' | 'dri
       {r.description && <p>{r.description}</p>}
       {department === 'medicine' && <MedicineEffects reagent={r}/>}
       <PlantEffects id={r.id}/>
-      {recipes.length ? recipes.map(recipe => <ReactionCard key={recipe.id} reaction={recipe}/>) : <p className='catalog-note'>{text('Рецепт синтеза в сборке не найден. Реагент может быть доступен из раздатчика, добычи или других источников.', 'No synthesis recipe found in this build. It may come from a dispenser, extraction or other sources.')}</p>}
+      {recipes.map(recipe => <ReactionCard key={recipe.id} reaction={recipe}/>)}
+      <ExtractionRecipes id={id}/>
+      {!recipes.length && !extractable.has(id) && <p className='catalog-note'>{text('Рецепт синтеза в сборке не найден. Реагент может быть доступен из раздатчика, добычи или других источников.', 'No synthesis recipe found in this build. It may come from a dispenser, extraction or other sources.')}</p>}
       <RelatedResources kind='reagent' id={id}/>
     </article>;
   };
@@ -175,7 +179,7 @@ const Chemistry = ({ department }: { department: 'medicine' | 'botanical' | 'dri
     </nav>}
     <div className='catalog-controls'>
       <input type='search' value={search} onChange={e => setSearch(e.target.value)} aria-label={text('Поиск реагентов', 'Search reagents')} placeholder={text('Название, ID или описание…', 'Name, ID or description…')}/>
-      <label><input type='checkbox' checked={onlyRecipes} onChange={e => setOnlyRecipes(e.target.checked)}/> {text('Только с рецептом', 'With synthesis recipe')}</label>
+      <label><input type='checkbox' checked={onlyRecipes} onChange={e => setOnlyRecipes(e.target.checked)}/> {text('Только с рецептом', 'With recipe')}</label>
     </div>
     <p className='catalog-note'>{text('Количество указано в единицах реагента (u). Нажмите на ингредиент, чтобы посмотреть его синтез. Катализаторы не расходуются.', 'Quantities are reagent units (u). Select an ingredient to inspect its synthesis. Catalysts are not consumed.')}</p>
     <p role='status'>{text('Найдено реагентов', 'Reagents found')}: {visibleCount}</p>

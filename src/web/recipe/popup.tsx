@@ -1,3 +1,4 @@
+import { ExtractionRecipes } from '../extraction-recipes';
 import { PlantEffects } from '../plant-effects';
 import { MedicineEffects } from '../medicine-effects';
 import { ManufacturingCard } from '../production';
@@ -82,7 +83,7 @@ export const ReagentInfoPopup = ({
         {catalog.reagents.find(v => v.id === reagentId && v.group === 'Medicine') && <MedicineEffects reagent={catalog.reagents.find(v => v.id === reagentId)!}/>}
         <ReactionCard reaction={r}/>
       </article>)}
-      {catalog.extractions.some(e => e.reagent.id === reagentId) && <article className='catalog-card'><h3>{lang === 'ru' ? 'Получение в блендере' : 'Blender extraction'}</h3><ul>{catalog.extractions.filter(e => e.reagent.id === reagentId).map((e,i) => <li key={i}><ResourceLink kind='entity' id={e.entity.id}>{e.entity.name}</ResourceLink> — {e.method === 'juice' ? (lang === 'ru' ? 'выжать сок' : 'juice') : (lang === 'ru' ? 'измельчить' : 'grind')}, {e.amount} u</li>)}</ul></article>}
+      {catalog.extractions.some(e => e.reagent.id === reagentId) && <article className='catalog-card'><ExtractionRecipes id={reagentId}/></article>}
       {sources.length > 0 && (
         <div className='popup_foodseq'>
           <p>{t.recipes.commonSources}</p>

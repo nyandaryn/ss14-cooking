@@ -2858,3 +2858,5 @@ select {
 .catalog-card > :last-child { margin-bottom: 0; }
 .plant-effects > .medicine-effects-heading:first-child { margin-top: 0; }
 .popup_recipe > .catalog-card > .plant-effects:only-child { margin-block: 0; padding-top: 0; border-top: 0; }
+.chemical-card > .extraction-recipes { border-top: 1px solid var(--bg-level-2); margin-top: 1rem; }
+.popup_recipe .extraction-recipes > h3:first-child { margin-top: 0; }

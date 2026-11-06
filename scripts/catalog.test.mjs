@@ -95,3 +95,8 @@ for (const build of index) {
     });
   }
 }
+for (const build of index) test(`${build.id}: banana juice has distinct grinding and juicing outputs`, () => {
+  const { catalog } = JSON.parse(readFileSync(new URL(`../public/data/data_${build.id}.en.${build.hashes.en}.json`, import.meta.url)));
+  const banana = catalog.extractions.filter(e => e.entity.id === 'FoodBanana' && e.reagent.id === 'JuiceBanana');
+  assert.deepEqual(Object.fromEntries(banana.map(e => [e.method, e.amount])), { grind: 5, juice: 10 });
+});
