@@ -29,7 +29,7 @@ try {
 const env = process.env.NODE_ENV || 'production';
 const isDev = env === 'development';
 const basePath = process.env.COOKBOOK_BASE_PATH || '';
-const repoUrl = process.env.COOKBOOK_REPO_URL || 'https://example.com';
+const repoUrl = process.env.COOKBOOK_REPO_URL || 'https://github.com/nyandaryn/ss14-cooking';
 const trustedHosts = (process.env.COOKBOOK_TRUSTED_HOSTS || '').split(/\s+/).filter(Boolean);
 const canonicalUrl = process.env.COOKBOOK_CANONICAL_URL || null;
 
