@@ -105,13 +105,14 @@ export const ReagentIngredient = ({
     typeof amount === 'number'
       ? amount.toLocaleString(locale)
       : `${amount[0].toLocaleString(locale)}–${amount[1].toLocaleString(locale)}`
-  ) + ' ';
+  );
 
   return (
     <span className='recipe_ingredient'>
       <ReagentSprite id={id}/>
-      <span>
-        {formattedAmount}
+      <span className='recipe_ingredient-content'>
+        <strong className='recipe_ingredient-amount'>{formattedAmount}</strong>
+        <span className='recipe_ingredient-name'>
         {relatedRecipes || catalog.manufacturing?.some(r => r.reagentResults?.some(p => p.reagent.id === id)) || catalog.extractions.some(e => e.reagent.id === id) || reagent.sources.length > 0 || catalog.reactions.some(r => r.products.some(p => p.reagent.id === id)) ? (
           <ReagentInfoPopup
             reagentId={id}
@@ -134,6 +135,7 @@ export const ReagentIngredient = ({
             </span>
           </Tooltip>
         </>}
+        </span>
       </span>
     </span>
   );

@@ -2801,3 +2801,7 @@ select {
 .supply-section > h4 { margin: 0 0 10px; }
 .supply-section--contraband { border-top: 2px solid #ed9d36; padding-top: 16px; }
 .supply-section--emag { border-top: 2px solid #e45b61; padding-top: 16px; }
+
+.recipe_ingredient-content { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.recipe_ingredient-amount { flex: none; white-space: nowrap; }
+.recipe_ingredient-name { min-width: 0; overflow-wrap: anywhere; }
