@@ -1,3 +1,4 @@
+import { groupMedicines, medicineGroups } from './medicine-groups';
 import { CatalogIcon } from './sprites/catalog';
 import { DepartmentHeading, CatalogSelection } from './department-heading';
 import { RelatedResources, ResourceLink } from './catalog-links';
@@ -129,11 +130,12 @@ const PlantCard = ({ plant: p }: { plant: PlantEntry }): ReactElement => {
 
 const Chemistry = ({ department }: { department: 'medicine' | 'botanical' | 'drinks' }): ReactElement => {
   const { catalog } = useGameData();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [onlyRecipes, setOnlyRecipes] = useState(false);
   const text = useText();
   const selected = params.get('reagent');
+  const medicineSection = department === 'medicine' && medicineGroups.some(g => g.id === params.get('section')) ? params.get('section')! : '';
   const reagent = catalog.reagents.find(r => r.id === selected);
   const byProduct = useMemo(() => {
     const result = new Map<string, ChemicalReaction[]>();
@@ -143,6 +145,8 @@ const Chemistry = ({ department }: { department: 'medicine' | 'botanical' | 'dri
   const roots = new Set(catalog[department]);
   const query = normalizeSearchText(search);
   const results = catalog.reagents.filter(r => roots.has(r.id) && (!onlyRecipes || byProduct.has(r.id)) && normalizeSearchText(`${r.id} ${r.name} ${r.description}`).includes(query)).sort((a, b) => a.name.localeCompare(b.name));
+  const grouped = groupMedicines(results, medicineSection);
+  const visibleCount = department === 'medicine' ? grouped.reduce((n, g) => n + g.basicItems.length + g.advancedItems.length, 0) : results.length;
   const card = (id: string) => {
     const r = catalog.reagents.find(r => r.id === id)!;
     const recipes = byProduct.get(id) ?? [];
@@ -159,13 +163,22 @@ const Chemistry = ({ department }: { department: 'medicine' | 'botanical' | 'dri
       {reagent ? card(reagent.id) : <p>{text('Реагент не найден в этой сборке.', 'Reagent not found in this build.')}</p>}
     </CatalogSelection>}
     {!selected && <>
+    {department === 'medicine' && <nav className='medicine-sections' aria-label={text('Разделы медицины', 'Medicine categories')}>
+      {[{ id: '', title: ['Все разделы', 'All categories'] }, ...medicineGroups].map(g => <button key={g.id} aria-pressed={medicineSection === g.id} onClick={() => setParams(p => {
+        const next = new URLSearchParams(p); if (g.id) next.set('section', g.id); else next.delete('section'); return next;
+      })}>{text(g.title[0], g.title[1])}</button>)}
+    </nav>}
     <div className='catalog-controls'>
       <input type='search' value={search} onChange={e => setSearch(e.target.value)} aria-label={text('Поиск реагентов', 'Search reagents')} placeholder={text('Название, ID или описание…', 'Name, ID or description…')}/>
       <label><input type='checkbox' checked={onlyRecipes} onChange={e => setOnlyRecipes(e.target.checked)}/> {text('Только с рецептом', 'With synthesis recipe')}</label>
     </div>
     <p className='catalog-note'>{text('Количество указано в единицах реагента (u). Нажмите на ингредиент, чтобы посмотреть его синтез. Катализаторы не расходуются.', 'Quantities are reagent units (u). Select an ingredient to inspect its synthesis. Catalysts are not consumed.')}</p>
-    <p role='status'>{text('Найдено реагентов', 'Reagents found')}: {results.length}</p>
-    {results.length ? <div className='catalog-grid'>{results.map(r => card(r.id))}</div> : <Empty/>}
+    <p role='status'>{text('Найдено реагентов', 'Reagents found')}: {visibleCount}</p>
+    {department === 'medicine' ? (grouped.length ? grouped.map(g => <section className='medicine-group' key={g.id}>
+      <h2>{text(g.title[0], g.title[1])}</h2>
+      {g.basicItems.length > 0 && <><h3>{text('Базовые', 'Basic')}</h3><div className='catalog-grid'>{g.basicItems.map(r => card(r.id))}</div></>}
+      {g.advancedItems.length > 0 && <div className='medicine-advanced'><h3>{text('Продвинутые', 'Advanced')}</h3><div className='catalog-grid'>{g.advancedItems.map(r => card(r.id))}</div></div>}
+    </section>) : <Empty/>) : (results.length ? <div className='catalog-grid'>{results.map(r => card(r.id))}</div> : <Empty/>)}
     </>}
   </>;
 };

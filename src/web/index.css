@@ -2805,3 +2805,9 @@ select {
 .recipe_ingredient-content { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
 .recipe_ingredient-amount { flex: none; white-space: nowrap; }
 .recipe_ingredient-name { min-width: 0; overflow-wrap: anywhere; }
+
+.medicine-sections { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 20px; }
+.medicine-sections button { padding: 10px 14px; min-height: 44px; }
+.medicine-sections button[aria-pressed="true"] { outline: 2px solid #72b98b; background: var(--bg-level-2); }
+.medicine-group { margin-block: 32px; }
+.medicine-advanced { border-top: 2px solid #8c9da6; margin-top: 24px; padding-top: 16px; }
