@@ -100,3 +100,126 @@ lust:
     FoodAloe: [0, -4]
     AloeCream: [0, -2]
     DrinkShaker: [0, 3]
+
+wizden:
+  name: WizDen
+  description:
+    en: Original Space Station 14 by Wizard’s Den. Official English names.
+    ru: Оригинальная Space Station 14 от Wizard’s Den. Названия из официальной
+      английской локализации.
+  path: ./sources/wizden
+  repo: space-wizards/space-station-14
+  default: false
+  methodEntities:
+    microwave: KitchenMicrowave
+    mix: LargeBeaker
+    cut: KitchenKnife
+    roll: RollingPin
+    heat: KitchenElectricGrill
+    heatMixture: ChemistryHotplate
+    stir: Spoon
+    shake: DrinkShaker
+    construct: ClothingHeadHatChef
+    deepFry: null
+  mixFillState: beakerlarge4
+  specialDiets:
+    - organ: OrganReptilianStomach
+      color: "#2e6b2e"
+      hint: Reptilians can eat this food.
+      filterName: Reptilian-edible
+      filterSummary: reptilian-edible
+    - organ: OrganMothStomach
+      color: "#e3c7aa"
+      hint: Moths can eat this food.
+      filterName: Moth-edible
+      filterSummary: moth-edible
+  specialReagents:
+    - id: Theobromine
+      color: "#b9643b"
+      hint: This food contains theobromine, poisonous to some species.
+      filterName: Contains Theobromine
+      filterSummary: theobromine-containing
+  sortingIdRewrites:
+    - rewrites_base.yml
+  ignoredSpecialRecipes:
+    - heat!FoodEggChickenFertilized
+    - heat!FoodEggDuckFertilized
+  ignoredFoodSequenceElements:
+    - FoodExtradimensionalOrange
+    - MobMouseDead
+    - MobMouse1
+    - MobMouse2
+    - MobMouseCancer
+    - MobMouseAdmeme
+    - FoodFakeCapfruit
+    - OrganDionaBrain
+    - OrganDionaBrainNymph
+    - OrganHumanBrain
+    - SentientSlimeCore
+    - SentientSlimesCore
+    - MobBrosPoly
+  ignoreSourcesOf:
+    - Blood
+    - Nutriment
+    - Vitamin
+    - Water
+    - Chlorine
+    - Gold
+    - Nothing
+    - Saline
+    - UncookedAnimalProteins
+    - Wine
+  forceIncludeReagentSources:
+    Egg:
+      - FoodEgg
+    Butter:
+      - FoodButter
+      - FoodButterSlice
+      - FoodCannabisButter
+    THC:
+      - FoodCannabisButter
+  spriteOffsets:
+    KitchenElectricGrill:
+      - 0
+      - 5
+    KitchenAssembler:
+      - 0
+      - 5
+    ChemistryHotplate:
+      - 0
+      - 5
+    FoodBurgerSuper:
+      - 0
+      - 5
+    FoodBurgerBig:
+      - 0
+      - 4
+    FoodAloe:
+      - 0
+      - -4
+    AloeCream:
+      - 0
+      - -2
+    DrinkShaker:
+      - 0
+      - 3
+    MobBros:
+      - 0
+      - 6
+    MobFoes:
+      - 0
+      - 6
+    MobSeof:
+      - 0
+      - 6
+    MobSorb:
+      - 0
+      - 6
+    PlushieBros:
+      - 0
+      - 6
+    PlushieSorb:
+      - 0
+      - 6
+  locales:
+    en: en-US

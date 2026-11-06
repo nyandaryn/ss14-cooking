@@ -43,6 +43,7 @@ export type RelevantPrototype =
   | ReactionPrototype
   | ReagentPrototype
   | StackPrototype
+  | ProductionPrototype
   ;
 
 export interface EntityPrototype extends PlainObject {
@@ -227,7 +228,7 @@ const RelevantPrototypeTypes: ReadonlySet<string> = new Set([
   'microwaveMealRecipe',
   'reaction',
   'reagent',
-  'stack',
+  'stack', 'vendingMachineInventory', 'latheRecipe', 'latheRecipePack', 'technology', 'material',
 ]);
 
 /**
@@ -260,3 +261,5 @@ export const isSpawnEntityEffect = (
   isPlainObject(node) &&
   node['!type'] === 'SpawnEntity' &&
   typeof node.entity === 'string';
+
+export interface ProductionPrototype extends PlainObject { type: "vendingMachineInventory" | "latheRecipe" | "latheRecipePack" | "technology" | "material"; id: string; }

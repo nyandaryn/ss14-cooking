@@ -1,3 +1,6 @@
+import { DepartmentHeading, CatalogSelection } from '../department-heading';
+import { Link } from 'react-router';
+import { useUrl } from '../url';
 import {
   ReactElement,
   memo,
@@ -47,8 +50,9 @@ export { searchByName };
 
 type SortOrder = 'default' | 'alpha';
 
-export const RecipeList = memo((): ReactElement => {
+export const RecipeList = memo(({ section = 'cooking' }: { section?: 'cooking' | 'medicine' }): ReactElement => {
   const navigate = useNavigate();
+  const url = useUrl();
   const location = useLocation();
   const t = useT();
 
@@ -58,12 +62,17 @@ export const RecipeList = memo((): ReactElement => {
   ], [t]);
 
   const {
-    recipeList,
+    recipeList: allRecipes,
     searchableRecipeNames,
     entityMap,
     reagentMap,
     sortingIdRewrites,
   } = useGameData();
+
+  const recipeList = useMemo(() => allRecipes.filter(recipe => {
+    const medical = recipe.method === 'microwave' && (typeof recipe.subtype === 'string' ? recipe.subtype === 'MedicalAssembler' : recipe.subtype?.includes('MedicalAssembler'));
+    return section === 'medicine' ? medical : !medical;
+  }), [allRecipes, section]);
 
   const [search, setSearch] = useState(() =>
     new URLSearchParams(location.search).get(SearchParamName) ?? ''
@@ -155,10 +164,19 @@ export const RecipeList = memo((): ReactElement => {
     });
   }, [filter]);
 
+  const selectedId = new URLSearchParams(location.search).get('recipe');
+  const selectedRecipe = recipeList.find(r => r.id === selectedId);
   const hasFilter = isFilterActive(filter);
+  const Container = section === 'cooking' ? 'main' : 'section';
 
   return (
-    <main hidden={!open}>
+    <Container className={section === 'cooking' ? 'department' : undefined}>
+      {section === 'cooking' && <DepartmentHeading code='01 / KITCHEN' title={['Кулинария', 'Cooking']} description={['Рецепты, ингредиенты и способы приготовления выбранной сборки.', 'Recipes, ingredients and cooking methods in the selected build.']}/>}
+      {selectedId && <CatalogSelection id={selectedId}>
+        <Link to={section === 'medicine' ? url.withSearchParams(url.medicine, 'view=assembler') : url.recipes}>← {t.common.tabs.allRecipes}</Link>
+        {selectedRecipe ? <Recipe id={selectedRecipe.id}/> : <p>{t.recipes.resultSome(0, recipeList.length)}</p>}
+      </CatalogSelection>}
+      {!selectedId && <>
       <div className='recipe-search'>
         <InputGroup iconBefore={<SearchIcon/>}>
           <input
@@ -196,7 +214,7 @@ export const RecipeList = memo((): ReactElement => {
         </Tooltip>
 
         <Tooltip placement='below' text={t.recipes.clearFilter}>
-          <button disabled={!hasFilter} onClick={handleResetFilter}>
+          <button aria-label={t.recipes.clearFilter} disabled={!hasFilter} onClick={handleResetFilter}>
             <ClearFilterIcon/>
           </button>
         </Tooltip>
@@ -237,7 +255,8 @@ export const RecipeList = memo((): ReactElement => {
           )}
         </ul>
       </RecipeVisibilityProvider>
-    </main>
+      </>}
+    </Container>
   );
 });
 

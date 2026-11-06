@@ -3,6 +3,7 @@
 
 export const en = {
   siteTitle: 'SS14 Cookbook',
+  sectionNavigation: 'Catalog sections',
   loading: 'Loading...',
 
   errors: {
@@ -15,7 +16,10 @@ export const en = {
   },
 
   tabs: {
-    allRecipes: 'All Recipes',
+    allRecipes: 'Cooking',
+    medicine: 'Medicine',
+    botany: 'Botany', production: 'Production',
+    drinks: 'Drinks',
     combinations: 'Combinations',
     menuPlanner: 'Menu Planner',
   },
@@ -56,6 +60,7 @@ export const en = {
 export type CommonMessages = typeof en;
 
 export const ru: CommonMessages = {
+  sectionNavigation: 'Разделы каталога',
   siteTitle: 'Кулинарная книга SS14',
   loading: 'Загрузка...',
 
@@ -69,7 +74,10 @@ export const ru: CommonMessages = {
   },
 
   tabs: {
-    allRecipes: 'Все рецепты',
+    allRecipes: 'Кулинария',
+    medicine: 'Медицина',
+    botany: 'Ботаника', production: 'Производство',
+    drinks: 'Напитки',
     combinations: 'Комбинации',
     menuPlanner: 'Планировщик меню',
   },

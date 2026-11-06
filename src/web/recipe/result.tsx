@@ -1,3 +1,4 @@
+import { ResourceLink } from '../catalog-links';
 import { ReactElement, memo } from 'react';
 import { Recipe } from '../../types';
 import { useGameData } from '../context';
@@ -27,7 +28,7 @@ export const RecipeResult = memo(({
     return (
       <span className='recipe_result'>
         <EntitySprite id={solidResult.id}/>
-        <span className='recipe_name'>{solidResult.name}</span>
+        <span className='recipe_name'><ResourceLink kind='entity' id={solidResult.id}>{solidResult.name}</ResourceLink></span>
         {resultQty > 1 && (
           <Tooltip text={t.recipes.makesQty(resultQty)}>
             <span className='recipe_result-qty'>
@@ -45,7 +46,7 @@ export const RecipeResult = memo(({
       <span className='recipe_result'>
         <ReagentSprite id={resultId}/>
         <span className='recipe_name'>
-          {resultName}
+          <ResourceLink kind='reagent' id={resultId}>{resultName}</ResourceLink>
         </span>
         <Tooltip
           text={t.recipes.reagentResultTooltip(formattedQty, resultName)}

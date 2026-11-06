@@ -1,3 +1,4 @@
+import { RelatedResources } from '../catalog-links';
 import {
   memo,
   ReactElement,
@@ -114,6 +115,7 @@ export const Recipe = memo(({
         />
       )}
       <RecipeMethod recipe={recipe}/>
+      <RelatedResources kind={recipe.solidResult ? 'entity' : 'reagent'} id={recipe.solidResult ?? recipe.reagentResult!} excludeRecipeId={recipe.id}/>
     </div>
   );
 });

@@ -1,3 +1,4 @@
+import { ResourceLink } from '../catalog-links';
 import { ReactElement, memo, useMemo } from 'react';
 import { Entity } from '../../types';
 import { useGameData } from '../context';
@@ -51,7 +52,7 @@ export const SeqStartPoint = memo(({
           <RecipePopup id={startRecipe}>
             <span className='more-info'>{entity.name}</span>
           </RecipePopup>
-        ) : entity.name}
+        ) : entity.name} {' · '}<ResourceLink kind='entity' id={entity.id}>↗</ResourceLink>
       </strong>
       {t.recipes.foodSeqAccepts(seqStart.maxCount)}
     </p>
@@ -85,7 +86,7 @@ const SeqElement = ({ id }: SeqElementProps): ReactElement => {
         <RecipePopup id={recipe}>
           <span className='more-info'>{entity.name}</span>
         </RecipePopup>
-      ) : <span>{entity.name}</span>}
+      ) : <span>{entity.name}</span>} {' · '}<ResourceLink kind='entity' id={entity.id}>↗</ResourceLink>
     </li>
   );
 };

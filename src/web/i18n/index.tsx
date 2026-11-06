@@ -70,7 +70,6 @@ export const LangProvider = ({ children }: LangProviderProps): ReactElement => {
 
   useEffect(() => {
     document.documentElement.lang = lang;
-    document.title = t.common.siteTitle;
   }, [lang, t]);
 
   const value = useMemo<LangContextValue>(() => ({

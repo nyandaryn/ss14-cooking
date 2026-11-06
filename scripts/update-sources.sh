@@ -26,6 +26,6 @@ sync() {
 sync lust-station https://github.com/makura-games/lust-station.git master \
   Resources/Prototypes Resources/Locale Resources/Textures
 
-# Vanilla WizDen, only to mark recipes that Lust Station adds on top.
+# Full WizDen catalog, also used as the comparison baseline for Lust Station.
 sync wizden https://github.com/space-wizards/space-station-14.git master \
-  Resources/Prototypes
+  Resources/Prototypes Resources/Locale Resources/Textures

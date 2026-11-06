@@ -156,7 +156,7 @@ export default [
             for (const chunk of chunks) {
               const uri = `${basePath}/${chunk.fileName}`;
               if (chunk.isEntry) {
-                entries.push(`<script src="${uri}"></script>`);
+                entries.push(`<script defer src="${uri}"></script>`);
               } else {
                 assets.push(`<link rel="${assetRel(kind)}" href="${uri}">`);
               }

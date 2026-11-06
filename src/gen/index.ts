@@ -114,7 +114,8 @@ const buildFork = async (id: string, fork: ForkInfo): Promise<ProcessedGameData>
     resolve(fork.path, LocaleSubPath),
     locales,
     fork.methodEntities,
-    fork.microwaveRecipeTypes
+    fork.microwaveRecipeTypes,
+    raw
   );
   console.log(
     `Resolved ${

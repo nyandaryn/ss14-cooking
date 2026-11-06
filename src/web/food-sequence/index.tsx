@@ -1,3 +1,4 @@
+import { DepartmentHeading } from '../department-heading';
 import { ReactElement, memo, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router';
 import { useGameData } from '../context';
@@ -29,7 +30,8 @@ export const FoodSequences = memo((): ReactElement => {
   }, []);
 
   return (
-    <main className='foodseq'>
+    <main className='foodseq department'>
+      <DepartmentHeading code='05 / COMBINATIONS' title={['Комбинации', 'Combinations']} description={['Основы блюд и совместимые ингредиенты.', 'Food bases and compatible ingredients.']}/>
       <p>
         {t.recipes.foodSeqIntroBefore}
         <i>{t.recipes.foodSeqIntroTerm}</i>

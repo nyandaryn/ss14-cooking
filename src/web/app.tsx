@@ -53,6 +53,7 @@ export const App = ({ forks }: Props): ReactElement => {
   }, [queryFork, forks]);
 
   const [data, setData] = useState<GameData | null>(null);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [notices, setNotices] = useState<NoticeData[] | null>(null);
   const [error, setError] = useState(false);
 
@@ -71,21 +72,33 @@ export const App = ({ forks }: Props): ReactElement => {
 
   const forkData = forks.find(f => f.id === fork)!;
   const [dataLang, dataHash] = pickDataFile(forkData, lang);
+  const loadKey = `${forkData.id}:${dataLang}:${dataHash}`;
   useEffect(() => {
-    fetch(ForkDataPath(forkData.id, dataLang, dataHash))
-      .then(res => res.json())
-      .catch(err => {
-        console.error('Error fetching game data:', err);
-        setError(true);
+    const controller = new AbortController();
+    setError(false);
+    fetch(ForkDataPath(forkData.id, dataLang, dataHash), { signal: controller.signal })
+      .then(res => {
+        if (!res.ok) throw new Error(`Game data HTTP ${res.status}`);
+        return res.json();
       })
       .then((data: GameData) => {
+        if (controller.signal.aborted) return;
         setData(data);
+        setLoadedKey(loadKey);
         document.body.style.setProperty(
           '--sprite-url',
           `url('${SpriteSheetPath(data.spriteSheet)}')`
         );
+      })
+      .catch(err => {
+        if (controller.signal.aborted) return;
+        console.error('Error fetching game data:', err);
+        setError(true);
       });
+    return () => controller.abort();
+  }, [forkData, dataLang, dataHash, loadKey]);
 
+  useEffect(() => {
     fetch(NoticesPath, { cache: 'reload' })
       .then(res => res.json())
       .catch(err => {
@@ -93,7 +106,7 @@ export const App = ({ forks }: Props): ReactElement => {
         return [];
       })
       .then(setNotices);
-  }, [forkData, dataLang, dataHash]);
+  }, []);
 
   if (error) {
     return (
@@ -101,7 +114,7 @@ export const App = ({ forks }: Props): ReactElement => {
     );
   }
 
-  if (!data || !notices) {
+  if (!data || !notices || loadedKey !== loadKey) {
     return <p>{t.common.loading}</p>
   }
 
@@ -111,7 +124,7 @@ export const App = ({ forks }: Props): ReactElement => {
   return (
     <UrlProvider>
       <NoticesProvider all={notices}>
-        <GameDataProvider forkId={fork} raw={data}>
+        <GameDataProvider key={fork} forkId={fork} raw={data}>
           <ForkProvider fork={fork} allForks={forks} setFork={handleSetFork}>
             <FavoritesProvider>
               <RecipeExplorerProvider>

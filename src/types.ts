@@ -1,3 +1,4 @@
+import { DepartmentCatalog } from './catalog-types';
 export interface ForkData {
   readonly id: string;
   /** Data file hash per site language (e.g. `en`, `ru`). */
@@ -12,6 +13,7 @@ export interface ForkData {
 }
 
 export interface GameData {
+  readonly catalog?: DepartmentCatalog;
   readonly entities: readonly Entity[];
   readonly reagents: readonly Reagent[];
   /**

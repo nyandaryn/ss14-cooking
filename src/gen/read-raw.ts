@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { CollectionTag, Scalar, YAMLMap, parse } from 'yaml';
 import { readFileTextWithoutTheStupidBOM } from './helpers';
 import {
+  ProductionPrototype,
   ConstructionGraphId,
   ConstructionGraphMap,
   ConstructionGraphPrototype,
@@ -28,6 +29,7 @@ import {
 } from './prototypes';
 
 export interface RawGameData {
+  readonly production: ProductionPrototype[];
   readonly entities: EntityMap;
   readonly reagents: ReagentMap;
   readonly stacks: StackMap;
@@ -74,6 +76,7 @@ export const findResourceFiles = (prototypeDir: string): string[] =>
     .map(filePath => resolve(prototypeDir, filePath))
 
 export const readRawGameData = (yamlPaths: string[]): RawGameData => {
+  const production: ProductionPrototype[] = [];
   const entities = new Map<EntityId, EntityPrototype>();
   const reagents = new Map<ReagentId, ReagentPrototype>();
   const stacks = new Map<StackId, StackPrototype>();
@@ -108,6 +111,8 @@ export const readRawGameData = (yamlPaths: string[]): RawGameData => {
         continue;
       }
       switch (node.type) {
+        case 'vendingMachineInventory': case 'latheRecipe': case 'latheRecipePack': case 'technology': case 'material':
+          production.push(node); break;
         case 'entity':
           entities.set(node.id, node);
           break;
@@ -136,6 +141,7 @@ export const readRawGameData = (yamlPaths: string[]): RawGameData => {
     }
   }
   return {
+    production,
     entities,
     reagents,
     stacks,

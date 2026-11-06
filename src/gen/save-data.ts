@@ -99,6 +99,7 @@ export const saveData = async (
       }
 
       const finalData: GameData = {
+        catalog: d.resolved.catalogs.get(lang),
         entities,
         reagents,
         ingredients: Array.from(ingredients),

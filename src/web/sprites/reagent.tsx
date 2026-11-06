@@ -11,13 +11,14 @@ export const ReagentSprite = memo(({
   id,
 }: ReagentSpriteProps): ReactElement => {
   const {
-    reagentMap,
+    reagentMap, catalog,
     methodSprites: { mix: beakerPosition },
     beakerFill,
   } = useGameData();
   const t = useT();
 
-  const reagent = reagentMap.get(id)!;
+  const reagent = reagentMap.get(id) ?? catalog.reagents.find(r => r.id === id);
+  if (!reagent) return <></>;
 
   const maskPosition = `-${beakerFill[0]}px -${beakerFill[1]}px`;
 

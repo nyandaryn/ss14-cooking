@@ -67,6 +67,7 @@ export const GameDataProvider = memo(({
 
     return {
       forkId,
+      catalog: raw.catalog ?? { vending: [], manufacturing: [], plants: [], reagents: [], reactions: [], medicine: [], drinks: [], extractions: [], botanical: [] },
 
       entityList: raw.entities,
       entityMap,

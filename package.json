@@ -10,7 +10,15 @@
     "diff:recipes": "node ./bin/recipe-diff.js",
     "watch": "env-cmd -f .env.development -- rollup -c --watch",
     "start": "http-server --port 5514 --proxy http://localhost:5514/index.html?",
-    "start-alt": "http-server --port 5515 --proxy http://localhost:5515/index.html?"
+    "start-alt": "http-server --port 5515 --proxy http://localhost:5515/index.html?",
+    "test:popup": "node --test scripts/popup.test.mjs",
+    "test:production": "node --test scripts/production.test.mjs",
+    "test:related": "node --test scripts/related-resources.test.mjs",
+    "test:catalog": "node --test scripts/catalog.test.mjs",
+    "gen:seo": "node scripts/generate-seo.mjs",
+    "postgen:recipes": "npm run gen:seo",
+    "predeploy": "npm run gen:seo",
+    "test:seo": "node --test scripts/seo.test.mjs"
   },
   "bin": {
     "ss14-cookbook-server": "./bin/server.js"

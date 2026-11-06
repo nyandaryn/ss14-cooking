@@ -546,7 +546,8 @@ const tryAddCuttableSpawns = (
     // every article of clothing.
     // ... unless it has the 'Bread' tag, in which case it's a baguette.
     // This is ugly and stupid.
-    entity.components.has('Clothing') && !entity.tags.has('Bread' as TagId)
+    // Lust adds Clothing to edible produce; that must not hide food slicing.
+    entity.components.has('Clothing') && !entity.tags.has('Bread' as TagId) && !entity.isProduce
   ) {
     return false;
   }

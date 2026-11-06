@@ -1,6 +1,9 @@
 import { FluentBundle, FluentResource } from '@fluent/bundle';
 import { globSync } from 'glob';
 import { resolve } from 'node:path';
+import { DepartmentCatalog } from '../catalog-types';
+import { buildCatalog } from './catalog';
+import { RawGameData } from './read-raw';
 import { CookingMethod } from '../types';
 import {
   DefaultCookTime,
@@ -32,6 +35,7 @@ import {
 } from './types';
 
 export interface ResolvedGameData {
+  readonly catalogs: ReadonlyMap<string, DepartmentCatalog>;
   readonly entities: ResolvedEntityMap;
   readonly reagents: ResolvedReagentMap;
   readonly recipes: ReadonlyMap<string, ResolvedRecipe>;
@@ -52,7 +56,8 @@ export const resolvePrototypes = (
   localeRoot: string,
   locales: ForkLocales,
   methodEntities: MethodEntities,
-  microwaveRecipeTypes: MicrowaveRecipeTypes | undefined
+  microwaveRecipeTypes: MicrowaveRecipeTypes | undefined,
+  raw: RawGameData
 ): ResolvedGameData => {
   const reagents = new Map<ReagentId, ResolvedReagent>();
   const recipes = new Map<string, ResolvedRecipe>();
@@ -111,12 +116,40 @@ export const resolvePrototypes = (
     recipeGroups.add(recipe.group);
   }
 
+  const catalogs = new Map(Array.from(bundles, ([lang, bundle]) => [
+    lang,
+    buildCatalog(raw, allEntities, key =>
+      formatMessage(bundle, key) ?? formatMessage(fluentBundle, key)
+    ),
+  ]));
+
+  // Include catalog machines in the existing atlas and attribution pipeline.
+  const displayEntities = new Map(filtered.entities);
+  for (const entity of allEntities.values()) {
+    if (!entity.abstract && (entity.components.has('VendingMachine') || entity.components.has('Lathe'))) {
+      displayEntities.set(entity.id, entity);
+    }
+  }
+  const catalog = catalogs.values().next().value!;
+  const iconIds = new Set<string>([
+    ...catalog.manufacturing.filter(r => r.entityResult).map(r => r.result.id),
+    ...catalog.manufacturing.flatMap(r => r.materials.flatMap(m => m.entityId ? [m.entityId] : [])),
+    ...catalog.vending.flatMap(v => v.items.map(i => i.entity.id)),
+    ...catalog.extractions.map(e => e.entity.id),
+    ...catalog.plants.flatMap(p => [...p.products.map(v => v.id), ...(p.seed ? [p.seed.id] : [])]),
+  ]);
+  for (const id of iconIds) {
+    const entity = allEntities.get(id as EntityId);
+    if (!entity || entity.abstract) continue;
+    const sprite = entity.sprite;
+    if ((sprite.state && sprite.path) || sprite.layers.some(l => l.visible && l.state && (l.path || sprite.path))) displayEntities.set(entity.id, entity);
+  }
   const names = new Map<string, LocalizedNames>();
   for (const [lang, bundle] of bundles) {
     names.set(lang, resolveNames(
       bundle,
       fluentBundle,
-      filtered.entities,
+      displayEntities,
       filtered.reagents.values(),
       recipeGroups
     ));
@@ -145,8 +178,11 @@ export const resolvePrototypes = (
     }
   }
 
+
+
   return {
-    entities: filtered.entities,
+    catalogs,
+    entities: displayEntities,
     reagents,
     recipes,
     reagentSources: filtered.reagentSources,

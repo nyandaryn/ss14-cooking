@@ -1,3 +1,4 @@
+import { ResourceLink } from '../catalog-links';
 import { ReactElement, memo } from 'react';
 import { Reagent, ReagentIngredient as ReagentIngredientData } from '../../types';
 import { useGameData } from '../context';
@@ -5,7 +6,7 @@ import { useLang } from '../i18n';
 import { Popup, usePopupTrigger } from '../popup';
 import { EntitySprite, ReagentSprite } from '../sprites';
 import { Tooltip } from '../tooltip';
-import { ReagentInfoPopup, RecipePopup } from './popup';
+import { EntitySourcesPopup, ReagentInfoPopup, RecipePopup } from './popup';
 
 export interface RecipeIngredientsProps {
   visible: boolean;
@@ -60,7 +61,7 @@ export const SolidIngredient = ({
   id,
   qty,
 }: SolidIngredientProps): ReactElement => {
-  const { entityMap, recipesBySolidResult } = useGameData();
+  const { entityMap, recipesBySolidResult, catalog } = useGameData();
   const { locale, t } = useLang();
   const entity = entityMap.get(id)!;
   const relatedRecipes = recipesBySolidResult.get(id);
@@ -76,7 +77,8 @@ export const SolidIngredient = ({
               {entity.name}
             </span>
           </RecipePopup>
-        ) : entity.name}
+        ) : (catalog.manufacturing?.some(r => r.result.id === id) || catalog.vending?.some(v => v.items.some(i => i.entity.id === id))) ? <EntitySourcesPopup id={id}><span className='more-info'>{entity.name}</span></EntitySourcesPopup> : entity.name}
+        {' · '}<ResourceLink kind='entity' id={id}>↗</ResourceLink>
       </span>
     </span>
   );
@@ -94,7 +96,7 @@ export const ReagentIngredient = ({
   amount,
   catalyst = false,
 }: ReagentIngredientProps): ReactElement => {
-  const { reagentMap, recipesByReagentResult } = useGameData();
+  const { reagentMap, recipesByReagentResult, catalog } = useGameData();
   const { locale, t } = useLang();
   const reagent = reagentMap.get(id)!;
   const relatedRecipes = recipesByReagentResult.get(id);
@@ -110,8 +112,9 @@ export const ReagentIngredient = ({
       <ReagentSprite id={id}/>
       <span>
         {formattedAmount}
-        {relatedRecipes || reagent.sources.length > 0 ? (
+        {relatedRecipes || catalog.manufacturing?.some(r => r.reagentResults?.some(p => p.reagent.id === id)) || catalog.extractions.some(e => e.reagent.id === id) || reagent.sources.length > 0 || catalog.reactions.some(r => r.products.some(p => p.reagent.id === id)) ? (
           <ReagentInfoPopup
+            reagentId={id}
             recipes={relatedRecipes}
             sources={reagent.sources}
           >
@@ -120,6 +123,7 @@ export const ReagentIngredient = ({
             </span>
           </ReagentInfoPopup>
         ) : reagent.name}
+        {' · '}<ResourceLink kind='reagent' id={id}>↗</ResourceLink>
         {catalyst && <>
           {' '}
           <Tooltip

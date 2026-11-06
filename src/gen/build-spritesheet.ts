@@ -185,7 +185,9 @@ const toDrawableSprite = (
   spriteOffsets: SpriteOffsets
 ): DrawableSprite => {
   const { sprite } = entity;
-  const basePath = sprite.path;
+  // Some forks use engine resource paths instead of paths relative to Textures.
+  const texturePath = (path: string) => path.replace(/^\/?Textures\//, '').replace(/^\/+/, '');
+  const basePath = sprite.path ? texturePath(sprite.path) : sprite.path;
   const baseColor = sprite.color
     ? cssColorToHex(sprite.color)
     : ColorWhite;
@@ -208,7 +210,7 @@ const toDrawableSprite = (
       continue;
     }
     // If it has a state but no path, however, that's an issue.
-    const path = layer.path ?? basePath;
+    const path = layer.path ? texturePath(layer.path) : basePath;
     if (!path) {
       console.warn(`Entity '${entity.id}': sprite layer ${i} has no RSI path`);
       continue;
@@ -373,49 +375,15 @@ class SpriteCache {
   }
 
   private async tryReadPng(fullPath: string): Promise<JimpInstance> {
-    // This whole code is stupid.
-    //
-    // Unfortunately, for WHATEVER REASON, PNGs in SS14 often end with random
-    // bullshit data at the end of the stream. Jimp's PNG parser rejects this
-    // invalid trailing data, while the game just shrugs and throws it away.
-    // Since sneaky trailing data makes its way into the game with astonishing
-    // regularity and is never caught by anyone in any kind of review, we've
-    // fudged the PNG reading a bit here.
-    //
-    // Basically: If the PNG reader throws an error with the exact message
-    // "unrecognised content at end of stream", then we shave one (1) byte off
-    // the end of the buffer and try again, up to 4 bytes. In practice it seems
-    // the stream tends to contain 2 extra bytes; I'm guessing whatever program
-    // people are using to save their PNGs pads the file size up to a multiple
-    // of 4.
-    const MagicErrorMessage = 'unrecognised content at end of stream';
-
     let buffer: Buffer = readFileSync(fullPath);
-    if (!isPngSignature(buffer)) {
-      // Some forks ship images in other formats (e.g. WebP) under a .png name.
-      // The game decodes them fine, Jimp doesn't, so convert them first.
-      console.log(`${fullPath}: not a PNG, converting`);
-      buffer = await sharp(buffer).png().toBuffer();
-    }
-    let bytesStripped = 0;
-    for (;;) {
-      // This is so dumb.
-      try {
-        return await Jimp.fromBuffer(buffer) as JimpInstance;
-      } catch (e) {
-        if (
-          !(e instanceof Error) || // not an error
-          e.message !== MagicErrorMessage || // wrong message
-          bytesStripped === 4 // too many attempts, idgaf
-        ) {
-          throw e;
-        }
-
-        buffer = buffer.subarray(0, buffer.length - 1);
-        bytesStripped++;
-
-        console.log(`${fullPath}: trimming buffer (${bytesStripped} B)`);
-      }
+    if (!isPngSignature(buffer)) buffer = await sharp(buffer).png().toBuffer();
+    try {
+      return await Jimp.fromBuffer(buffer) as JimpInstance;
+    } catch (error) {
+      // Some game PNGs have padding after IEND. Re-encode through libvips,
+      // which accepts that padding, instead of guessing how many bytes to trim.
+      if (!(error instanceof Error) || error.message !== 'unrecognised content at end of stream') throw error;
+      return await Jimp.fromBuffer(await sharp(buffer).png().toBuffer()) as JimpInstance;
     }
   }
 

@@ -17,3 +17,17 @@ public/data/sprites*.webp
 
 # Wrangler local state
 .wrangler/
+
+# Generated search metadata and pre-rendered department pages
+public/drinks/
+public/medicine/
+public/botany/
+public/combinations/
+public/robots.txt
+public/sitemap.xml
+public/_headers
+public/img/seo-card.png
+public/llms.txt
+public/.well-known/ard.json
+
+/public/production/

@@ -1,3 +1,4 @@
+import { DepartmentCatalog } from '../catalog-types';
 import { ReactElement } from 'react';
 import {
   CookingMethod,
@@ -35,6 +36,7 @@ export const isDisplayMethod = (value: unknown): value is DisplayMethod => {
 };
 
 export interface SearchableRecipeData {
+  readonly catalog: DepartmentCatalog;
   /** The fork ID that this game data is for. */
   readonly forkId: string;
 

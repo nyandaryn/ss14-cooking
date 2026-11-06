@@ -1,3 +1,4 @@
+import { Seo } from './seo';
 import { MouseEvent, ReactElement, ReactNode, memo, useMemo } from 'react';
 import { Link, Outlet, useMatches } from 'react-router';
 import { ForkData } from '../types';
@@ -30,6 +31,10 @@ const HeaderTabs: readonly HeaderTab[] = [
     target: url => url.recipes,
     label: t => t.common.tabs.allRecipes,
   },
+  { id: 'drinks', target: url => url.drinks, label: t => t.common.tabs.drinks },
+  { id: 'medicine', target: url => url.medicine, label: t => t.common.tabs.medicine },
+  { id: 'production', target: url => url.production, label: t => t.common.tabs.production },
+  { id: 'botany', target: url => url.botany, label: t => t.common.tabs.botany },
   {
     id: 'food-sequence',
     target: url => url.foodSequence,
@@ -50,9 +55,10 @@ export const Cookbook = (): ReactElement => {
   const url = useUrl();
 
   return <>
+    <Seo/>
     <NoticeList currentFork={fork}/>
     <header className='tabs'>
-      <div className='tabs_list'>
+      <nav className='tabs_list' aria-label={t.common.sectionNavigation}>
         {HeaderTabs.map(tab =>
           <Tab
             key={tab.id}
@@ -62,7 +68,7 @@ export const Cookbook = (): ReactElement => {
             {tab.label(t)}
           </Tab>
         )}
-      </div>
+      </nav>
       <div className='tabs_secondary'>
         <ForkSwitcher value={fork} allForks={allForks} onSetFork={setFork}/>
         <LanguageSwitcher/>
@@ -92,6 +98,7 @@ const Tab = memo(({
           ? 'btn tabs_tab tabs_tab--current'
           : 'btn tabs_tab'
       }
+      aria-current={selected ? 'page' : undefined}
       onClick={handleClickTab}
     >
       {children}

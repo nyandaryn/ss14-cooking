@@ -29,6 +29,7 @@ export type PopupId = string & {
 
 export interface PopupTriggerOptions {
   intentTimeout?: number;
+  closeDelay?: number;
 }
 
 declare const PopupIdSymbol: unique symbol;
@@ -37,7 +38,8 @@ export function usePopupTrigger<
   ETrigger extends TriggerElement = HTMLElement
 >(
   {
-    intentTimeout = 300,
+    intentTimeout = 500,
+    closeDelay = 300,
   }: PopupTriggerOptions = {}
 ): PopupTrigger<ETrigger> {
   const parents = useContext(PopupStackContext);
@@ -49,10 +51,14 @@ export function usePopupTrigger<
     id,
     trigger: null,
     intentTimeout: 0,
+    closeDelay,
+    open: false,
     setOpen,
     stack: parents.concat(id),
   }), []);
   inst.intentTimeout = intentTimeout;
+  inst.closeDelay = closeDelay;
+  inst.open = open;
 
   useEffect(() => {
     register(inst);
@@ -144,6 +150,8 @@ interface PopupInstance {
   readonly id: PopupId;
   trigger: TriggerElement | null;
   intentTimeout: number;
+  closeDelay: number;
+  open: boolean;
   readonly setOpen: Dispatch<SetStateAction<boolean>>;
   /**
    * The stack of popup IDs that lead to this popup, including the popup itself.
@@ -164,19 +172,25 @@ interface PopupInstance {
 
 let currentPopup: PopupInstance | null = null;
 let popupTimeoutId: number | null = null;
-let lastCloseTime = 0;
+let hoverTimeoutId: number | null = null;
+let pendingHoverTarget: PopupId | undefined;
+
+const cancelHoverTransition = (): void => {
+  if (hoverTimeoutId !== null) window.clearTimeout(hoverTimeoutId);
+  hoverTimeoutId = null;
+  pendingHoverTarget = undefined;
+};
 const instances = new Map<PopupId, PopupInstance>();
 const idsByElement = new Map<TriggerElement, PopupId>();
 
 const moveTo = (nextId: PopupId | undefined): void => {
+  cancelHoverTransition();
   const prev = currentPopup;
   const next = instances.get(nextId!) ?? null;
   if (next === prev) {
     // Nothing to do.
     return;
   }
-
-  const now = performance.now();
 
   let lastCommonIndex = -1;
   if (prev) {
@@ -186,7 +200,6 @@ const moveTo = (nextId: PopupId | undefined): void => {
       if (prevId === nextId) {
         lastCommonIndex = i;
       } else {
-        lastCloseTime = now;
         instances.get(prevId)?.setOpen(false);
       }
     }
@@ -202,52 +215,60 @@ const moveTo = (nextId: PopupId | undefined): void => {
     popupTimeoutId = null;
   }
   if (next && lastCommonIndex < next.stack.length) {
-    // If the last popup closed very recently (less than intentTimeout ms ago),
-    // then we open the new popup instantly. This saves the user from having to
-    // wait for the next tooltip if they're moving through the UI.
-    const timeSinceLastClose = now - lastCloseTime;
-    const actualTimeout = timeSinceLastClose > next.intentTimeout
-      ? next.intentTimeout
-      : 0;
-
+    // Each new trigger must be hovered deliberately, including nested popups.
+    // Crossing a recently closed trigger must not bypass the opening delay.
     popupTimeoutId = window.setTimeout(() => {
       for (let i = lastCommonIndex + 1; i < next.stack.length; i++) {
         const nextId = next.stack[i];
         instances.get(nextId)?.setOpen(true);
       }
-    }, actualTimeout);
+      popupTimeoutId = null;
+    }, next.intentTimeout);
   }
 
   currentPopup = next;
 };
 
-const mouseMove = (e: MouseEvent): void => {
-  let popup: PopupId | undefined = undefined;
-
-  let node = e.target as ChildNode | null;
-  while (node && !popup) {
-    popup = idsByElement.get(node as TriggerElement);
+// A portal's contents belong to its popup, including focusable descendants.
+// Resolve both pointer and focus targets through the same ancestor chain.
+const popupForTarget = (target: EventTarget | null): PopupId | undefined => {
+  let node = target instanceof Element ? target : null;
+  while (node) {
+    const id = idsByElement.get(node as TriggerElement);
+    if (id) return id;
     node = node.parentElement;
   }
+  return undefined;
+};
 
-  moveTo(popup);
+const mouseMove = (e: MouseEvent): void => {
+  const id = popupForTarget(e.target);
+  const next = id ? instances.get(id) : undefined;
+  // Returning to the same panel or entering a descendant cancels its closure.
+  if (!currentPopup?.open || next?.stack.includes(currentPopup.id)) {
+    moveTo(id);
+    return;
+  }
+  // Do not restart the grace period for every pixel moved through the gap.
+  if (hoverTimeoutId !== null && pendingHoverTarget === id) return;
+  cancelHoverTransition();
+  pendingHoverTarget = id;
+  hoverTimeoutId = window.setTimeout(() => moveTo(id), currentPopup.closeDelay);
 };
 
 const focus = (e: FocusEvent): void => {
-  // Unlike mouse movements, we don't show a popup on focused descendants.
-  // The exact popup trigger must be focused.
-  const popup = idsByElement.get(e.target as TriggerElement);
-  moveTo(popup);
+  moveTo(popupForTarget(e.target));
 };
 
 const blur = (e: FocusEvent): void => {
-  // relatedTarget is the target that's *gaining* focus. If we're moving from
-  // one popup trigger to another, let focus handle it. Otherwise, close the
-  // current popup.
-  const nextPopup = idsByElement.get(e.relatedTarget as TriggerElement);
-  if (!nextPopup) {
-    moveTo(undefined);
-  }
+  // A link receiving focus inside a portal must survive until its click fires.
+  const next = popupForTarget(e.relatedTarget);
+  if (next) moveTo(next);
+  else if (e.relatedTarget) moveTo(undefined);
+};
+
+const keyDown = (e: KeyboardEvent): void => {
+  if (e.key === 'Escape') moveTo(undefined);
 };
 
 const closeAll = () => moveTo(undefined);
@@ -257,13 +278,14 @@ const register = (inst: PopupInstance): void => {
     window.addEventListener('mousemove', mouseMove, { passive: true });
     window.addEventListener('focusin', focus);
     window.addEventListener('focusout', blur);
+    window.addEventListener('keydown', keyDown);
     window.addEventListener('scroll', closeAll, { passive: true });
   }
   instances.set(inst.id, inst);
 };
 
 const unregister = (inst: PopupInstance): void => {
-  if (currentPopup === inst) {
+  if (currentPopup?.stack.includes(inst.id)) {
     moveTo(undefined);
   }
   instances.delete(inst.id);
@@ -271,6 +293,8 @@ const unregister = (inst: PopupInstance): void => {
     window.removeEventListener('mousemove', mouseMove);
     window.removeEventListener('focusin', focus);
     window.removeEventListener('focusout', blur);
+    window.removeEventListener('keydown', keyDown);
+    cancelHoverTransition();
     window.removeEventListener('scroll', closeAll);
   }
 };
