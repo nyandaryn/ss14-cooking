@@ -2835,6 +2835,6 @@ select {
 .theme-light .medicine-effect--harm { --effect-color: #a32430; }
 .theme-light .medicine-effect-condition--overdose { color: #854b00; }
 .medicine-effects-heading { display: flex; align-items: center; gap: 8px; }
-.medicine-effects-help { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 32px; width: 32px; height: 32px; padding: 0; border: 1px solid var(--fg-subtle); border-radius: 50%; color: var(--fg-subtle); background: transparent; box-shadow: none; }
+.medicine-effects-help { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 32px; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 4px; color: var(--fg-subtle); background: transparent; box-shadow: none; }
 .medicine-effects-help .medicine-effect-icon { margin: 0; color: inherit; }
 .medicine-effects-help:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
