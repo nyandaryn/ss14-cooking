@@ -28,7 +28,7 @@ const content = {
   '/production': () => (data.catalog.manufacturing ?? []).map(r => `<article><h2>${esc(r.result.name)}</h2><p>${r.materials.map(m => `${esc(m.material.name)}: ${m.amount}`).join(', ')}</p><p>${r.machines.map(m => `${esc(m.machine.name)} (${esc(m.access)})`).join(', ')}</p>${r.entityResult ? entityLink(r.result) : (r.reagentResults ?? []).map(p => reagentLink(p.reagent)).join(', ')}</article>`).join(''),
   '/': () => data.recipes.filter(r => !medical(r)).map(recipe).join(''),
   '/drinks': () => chemistry(data.catalog.drinks),
-  '/medicine': () => chemistry(data.catalog.medicine) + '<h2>Мед-о-мат</h2>' + data.recipes.filter(medical).map(recipe).join(''),
+  '/medicine': () => chemistry(data.catalog.reagents.map(r => r.id)) + '<h2>Мед-о-мат</h2>' + data.recipes.filter(medical).map(recipe).join(''),
   '/botany': () => '<p>Базовые параметры до мутаций и скрещивания. Время указано в циклах роста.</p>' + data.catalog.plants.map(p => `<article><h2>${esc(p.name)}</h2><p>${esc(p.id)}</p><p>Продукты: ${p.products.map(entityLink).join(', ') || 'нет'}. Семена: ${esc(p.seed?.name ?? 'не указаны')}.</p><p>Сбор: ${esc(({NoRepeat: 'одноразовый, растение исчезает после сбора', Repeat: 'многоразовый, растение остаётся после сбора', SelfHarvest: 'автоматический сброс урожая'})[p.harvest] ?? p.harvest)}. ${p.tool ? `Инструмент: ${esc(p.tool)}` : 'Сбор пустой рукой с созревшего растения или грядки'}.</p><p>Урожайность: ${p.yield}; потенция: ${p.potency}; созревание: ${p.maturation}; производство: ${p.production}; срок жизни: ${p.lifespan}.</p><p>Мутации: ${p.mutations.map(v => `<a href="/botany?plant=${encodeURIComponent(v.id)}">${esc(v.name)}</a>`).join(', ') || 'нет'}.</p><p>Состав урожая: ${p.chemicals.map(v => `${reagentLink(v.reagent)} ≈ ${Number(v.amount.toFixed(2))} u`).join(', ') || 'не указан'}.</p></article>`).join('') + '<h2>Удобрения и ботаническая химия</h2>' + chemistry(data.catalog.botanical),
   '/combinations': () => Object.entries(data.foodSequenceStartPoints).map(([key, ids]) => `<article><h2>${ids.map(id => esc(refNames.get(id) ?? id)).join(', ')}</h2><p>Ингредиенты: ${(data.foodSequenceElements[key] ?? []).map(id => esc(refNames.get(id) ?? id)).join(', ')}</p></article>`).join(''),
 };
@@ -56,12 +56,12 @@ for (const [path, page] of Object.entries(config.pages)) {
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:type" content="image/png">
-<meta property="og:image:alt" content="SS14 Lust Station — кулинария, медицина и ботаника">
+<meta property="og:image:alt" content="Справочник SS14 — рецепты, химия, ботаника и производство">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(page.title)}">
 <meta name="twitter:description" content="${esc(page.description)}">
 <meta name="twitter:image" content="${href(config.image)}">
-<meta name="twitter:image:alt" content="SS14 Lust Station — кулинария, медицина и ботаника">
+<meta name="twitter:image:alt" content="Справочник SS14 — рецепты, химия, ботаника и производство">
 <script type="application/ld+json" id="seo-schema">${json(graph)}</script>
 <!-- SEO:END -->`;
   const html = template.replace(/<html lang="[^"]*"/, `<html lang="${lang}"`)
@@ -75,7 +75,7 @@ for (const [path, page] of Object.entries(config.pages)) {
 writeFileSync(resolve(publicDir,'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${href('/sitemap.xml')}\n`);
 writeFileSync(resolve(publicDir,'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${Object.keys(config.pages).map(path => `<url><loc>${pageUrl(path)}</loc></url>`).join('')}</urlset>\n`);
 writeFileSync(resolve(publicDir,'_headers'), '/menu\n  X-Robots-Tag: noindex, follow\n/menu/*\n  X-Robots-Tag: noindex, follow\n/migrate\n  X-Robots-Tag: noindex, follow\n');
-await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="1200" height="630" fill="#1a1a1a"/><rect x="70" y="70" width="8" height="490" fill="#72b98b"/><g font-family="sans-serif" fill="white"><text x="115" y="155" font-size="28" fill="#72b98b">LUST STATION / SPACE STATION 14</text><text x="110" y="290" font-size="94" font-weight="bold">SS14</text><text x="115" y="385" font-size="48">Рецепты и справочники</text><text x="115" y="470" font-size="27" fill="#dddddd">Кулинария · Напитки · Медицина · Ботаника</text><text x="115" y="545" font-size="24" fill="#aaaaaa">ss14-cooking.pages.dev</text></g></svg>`)).png().toFile(resolve(publicDir,'img/seo-card.png'));
+await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="1200" height="630" fill="#1a1a1a"/><rect x="70" y="70" width="8" height="490" fill="#72b98b"/><g font-family="sans-serif" fill="white"><text x="115" y="155" font-size="28" fill="#72b98b">LUST STATION + WIZDEN / SPACE STATION 14</text><text x="110" y="290" font-size="94" font-weight="bold">SS14</text><text x="115" y="385" font-size="48">Игровой справочник</text><text x="115" y="470" font-size="25" fill="#dddddd">Еда · Напитки · Медицина · Химия · Ботаника · Производство</text><text x="115" y="545" font-size="24" fill="#aaaaaa">ss14-cooking.pages.dev</text></g></svg>`)).png().toFile(resolve(publicDir, config.image.slice(1)));
 console.log(`SEO: ${Object.keys(config.pages).length} static pages, sitemap, robots.txt, social image`);
 
 // Generate discovery documents from the published index so hashed data links
@@ -85,7 +85,7 @@ const entries = index.flatMap(build => Object.entries(build.hashes).map(([langua
   return {
     identifier: `urn:air:${new URL(config.origin).hostname}:catalog:${build.id}:${language}`,
     displayName: `SS14 ${name} game catalog (${language})`,
-    description: 'Read-only game data: cooking and drink recipes, medicine synthesis, plants, mutations and harvests. This is a JSON dataset, not a callable agent or medical advice.',
+    description: 'Read-only game data: cooking and drink recipes, medicine effects and synthesis, all chemistry, plants, mutations, harvests, manufacturing and vending. This is a JSON dataset, not a callable agent or medical advice.',
     type: 'application/json',
     url: href(`/data/data_${build.id}.${language}.${hash}.json`),
     representativeQueries: [
@@ -97,9 +97,9 @@ const entries = index.flatMap(build => Object.entries(build.hashes).map(([langua
 }));
 mkdirSync(resolve(publicDir, '.well-known'), { recursive: true });
 writeFileSync(resolve(publicDir, '.well-known/ard.json'), JSON.stringify({ entries }, null, 2) + '\n');
-writeFileSync(resolve(publicDir, 'llms.txt'), `# SS14 Cookbook — Lust Station and WizDen
+writeFileSync(resolve(publicDir, 'llms.txt'), `# SS14 Reference — Lust Station and WizDen
 
-> A reference for Space Station 14 game recipes, chemistry and botany, with separate Lust Station and WizDen catalogs.
+> A reference for Space Station 14 game recipes, medicine effects, chemistry, botany, production and vending, with separate Lust Station and WizDen catalogs.
 
 Lust Station is the default build. Select WizDen with ?fork=wizden. Interface languages are Russian and English; official WizDen game names are English. These are game mechanics, not real-world cooking or medical instructions.
 
@@ -109,7 +109,7 @@ The JSON datasets contain recipes, entities, reagents and a department catalog. 
 
 - [Cooking](${href('/')}): Ingredients and preparation recipes.
 - [Drinks](${pageUrl('/drinks')}): Cocktails, ratios, mixing requirements and ingredient sources.
-- [Medicine](${pageUrl('/medicine')}): Synthesis, catalysts and temperature requirements.
+- [Medicine](${pageUrl('/medicine')}): Medicine effects, healing amounts per metabolism cycle, overdose conditions, narcotics and all other chemical recipes.
 - [Production and vending machines](${pageUrl('/production')}): Materials, machines, unlocks, hacked recipes and item sources.
 - [Botany](${pageUrl('/botany')}): Plants, species mutations, produce and harvest methods.
 - [WizDen](${href('/?fork=wizden')}): Original Wizard's Den build.

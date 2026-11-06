@@ -2,7 +2,7 @@
 // footer, generic buttons.
 
 export const en = {
-  siteTitle: 'SS14 Cookbook',
+  siteTitle: 'SS14 Reference',
   sectionNavigation: 'Catalog sections',
   loading: 'Loading...',
 
@@ -61,7 +61,7 @@ export type CommonMessages = typeof en;
 
 export const ru: CommonMessages = {
   sectionNavigation: 'Разделы каталога',
-  siteTitle: 'Кулинарная книга SS14',
+  siteTitle: 'Справочник SS14',
   loading: 'Загрузка...',
 
   errors: {

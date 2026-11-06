@@ -1,6 +1,6 @@
-# Кулинарная книга SS14: Lust Station
+# Справочник SS14: Lust Station и WizDen
 
-Форк [SS14 Cookbook](https://github.com/arimah/ss14-cookbook) (сайт [ss14.recipes](https://ss14.recipes)): рецепты еды для SS14 на сборке WizDen, с переключением языка (русский/английский).
+Форк [SS14 Cookbook](https://github.com/arimah/ss14-cookbook) (сайт [ss14.recipes](https://ss14.recipes)): справочник для Lust Station и WizDen на русском и английском. Кулинария, напитки, медицина и эффекты реагентов, химия, ботаника, производство и ассортимент вендоматов.
 
 - Рецепты, названия предметов и реагентов, названия групп рецептов и спрайты берутся из [makura-games/lust-station](https://github.com/makura-games/lust-station). Русские названия читаются из `Resources/Locale/ru-RU` (`ent-<ID>`, `reagent-name-*`, `guide-entry-*-recipes`), английские — из `en-US`, как в игре.
 - Рецепты, которых нет в ванильном WizDen ([space-wizards/space-station-14](https://github.com/space-wizards/space-station-14)), помечаются меткой «Нет в WizDen», и по ней есть фильтр.

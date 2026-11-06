@@ -35,7 +35,7 @@ test('Crawl controls and preview image', () => {
   assert.ok(!read('robots.txt').includes('Disallow: /'));
   assert.ok(read('_headers').includes('/menu/*\n  X-Robots-Tag: noindex, follow'));
   assert.ok(!sitemap.includes('/menu') && !sitemap.includes('/migrate'));
-  const png = readFileSync(new URL('../public/img/seo-card.png', import.meta.url));
+  const png = readFileSync(new URL('../public' + config.image, import.meta.url));
   assert.equal(png.readUInt32BE(16), 1200);
   assert.equal(png.readUInt32BE(20), 630);
 });
@@ -57,4 +57,12 @@ test('Agent discovery documents are real Markdown/JSON with existing data links'
     assert.ok(llms.includes(entry.url));
   }
   assert.ok(read('index.html').includes('rel="ard"'));
+});
+test('Site metadata and medicine crawl content reflect the complete reference', () => {
+  assert.match(config.siteName, /Справочник SS14/);
+  for (const section of ['лекарства', 'химия', 'растения', 'автолаты', 'вендоматы']) assert.ok(config.pages['/'].description.includes(section));
+  assert.match(config.pages['/'].description, /Lust Station и WizDen/);
+  assert.ok(read('medicine/index.html').includes('Desoxyephedrine'));
+  assert.ok(read('medicine/index.html').includes('FoamingAgent'));
+  assert.ok(read('index.html').includes(config.image));
 });

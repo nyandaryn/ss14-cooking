@@ -2,19 +2,17 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router';
 import config from '../seo.json';
 import { useLang } from './i18n';
-import { useFork } from './fork-context';
 
 /** Keep route metadata correct after client-side navigation as well as direct loads. */
 export const Seo = () => {
   const { pathname } = useLocation();
   const { lang } = useLang();
-  const { fork } = useFork();
   useEffect(() => {
     const path = pathname.replace(/\/$/, '') || '/';
     const page = config.pages[path as keyof typeof config.pages];
     const canonical = config.origin + (page && path !== '/' ? path + '/' : '/');
-    const title = (page?.title ?? 'SS14 Lust Station — личные инструменты').replaceAll('Lust Station', fork === 'wizden' ? 'WizDen' : 'Lust Station');
-    const description = (page?.description ?? 'Планировщик меню и перенос настроек справочника SS14.').replaceAll('Lust Station', fork === 'wizden' ? 'WizDen' : 'Lust Station');
+    const title = (page?.title ?? 'Справочник SS14 — личные инструменты');
+    const description = (page?.description ?? 'Планировщик меню и перенос настроек справочника SS14.');
     document.title = title;
     const meta = (attribute: 'name' | 'property', key: string, value: string) => {
       let element = document.head.querySelector<HTMLMetaElement>(`meta[${attribute}="${key}"]`);
@@ -27,6 +25,7 @@ export const Seo = () => {
     };
     meta('name', 'description', description);
     meta('name', 'robots', page ? 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1' : 'noindex,follow');
+    meta('property', 'og:site_name', config.siteName);
     meta('property', 'og:title', title);
     meta('property', 'og:description', description);
     meta('property', 'og:url', canonical);
@@ -54,6 +53,6 @@ export const Seo = () => {
         ...(page ? [{ '@type': 'CollectionPage', '@id': canonical + '#webpage', url: canonical, name: title, description, inLanguage: lang, isPartOf: { '@id': config.origin + '/#website' }, about: { '@type': 'VideoGame', name: 'Space Station 14' } }] : []),
       ],
     });
-  }, [pathname, lang, fork]);
+  }, [pathname, lang]);
   return null;
 };
