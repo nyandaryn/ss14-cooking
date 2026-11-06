@@ -2752,7 +2752,6 @@ select {
 .catalog-selected > .catalog-card { margin-top: .75rem; }
 .chemical-swatch { width: 1rem; height: 1rem; border-radius: 50%; border: 1px solid var(--fg-subtle); flex-shrink: 0; }
 .chemical-reaction { border-top: 1px solid var(--bg-level-2); margin-top: 1rem; }
-.chemical-reaction ul { padding-left: 1.2rem; }
 .chemical-reaction li { margin: .4rem 0; }
 .chemical-reaction li strong { font-variant-numeric: tabular-nums; }
 .chemical-reaction .catalog-badge { margin-left: .4rem; }
@@ -2764,7 +2763,6 @@ select {
 .department-heading h1 { margin: .35rem 0; }
 .related-resources { border-top: 1px solid var(--bg-level-2); padding-top: .75rem; margin-top: 1rem; }
 .related-resources summary { cursor: pointer; }
-.related-body ul { padding-left: 1.2rem; }
 .related-body li { margin: .4rem 0; overflow-wrap: anywhere; }
 .catalog-card a, .recipe_name a { color: inherit; text-decoration: underline; text-decoration-color: var(--fg-subtle); text-underline-offset: .15em; }
 .catalog-controls input[type=search] { flex: 1; min-width: 10rem; }
@@ -2838,3 +2836,23 @@ select {
 .medicine-overdose-group > h5 { display: flex; align-items: center; gap: 7px; margin: 0; font-size: .85rem; line-height: 1.5; color: #ffc276; }
 .medicine-overdose-group > h5 .medicine-effect-icon { margin: 0; color: inherit; }
 .theme-light .medicine-overdose-group > h5 { color: #854b00; }
+
+/* Keep reference lists inside their cards, including blender/vendor previews. */
+.catalog-card { padding: .8rem; }
+.catalog-card :where(ul:not([class]), ol:not([class])),
+.related-body :where(ul:not([class]), ol:not([class])) {
+  margin-block: .45rem;
+  padding-inline-start: 1.15rem;
+  padding-inline-end: 0;
+  list-style-position: outside;
+}
+.catalog-card :where(ul:not([class]), ol:not([class])) > li,
+.related-body :where(ul:not([class]), ol:not([class])) > li {
+  margin-block: .3rem;
+  padding-inline-start: .1rem;
+  overflow-wrap: anywhere;
+}
+.popup_recipe > .catalog-card,
+.catalog-card .catalog-card { padding: .6rem; }
+.catalog-card > :is(h2, h3, h4):first-child { margin-top: 0; }
+.catalog-card > :last-child { margin-bottom: 0; }
