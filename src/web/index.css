@@ -7,7 +7,6 @@
   color: var(--fg);
 
   --checkbox-size: 20px;
-  --popup-gap: 6px;
   --tooltip-font-size: 14px;
   --shadow-basic: 0 1px 4px var(--shadow-color);
 
@@ -2232,24 +2231,15 @@ select {
   animation-duration: 100ms;
   pointer-events: none;
 
-  &--above {
-    padding-bottom: var(--popup-gap);
-  }
-
-  &--below {
-    padding-top: var(--popup-gap);
-  }
-
-  &--left {
-    padding-right: var(--popup-gap);
-  }
-
-  &--right {
-    padding-left: var(--popup-gap);
-  }
+  max-width: calc(100vw - 16px);
 
   &--interactive {
     pointer-events: all;
+    max-height: var(--popup-available-height, calc(100dvh - 16px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    border-radius: 7px;
   }
 }
 
@@ -2782,7 +2772,6 @@ select {
 .popup_recipe > .catalog-card h2 { font-size: 1rem; }
 .popup_recipe { min-width: min(300px, calc(100vw - 16px)); max-width: min(400px, calc(100vw - 16px)); }
 
-.popup_recipe { max-height: calc(100dvh - 40px); overflow-y: auto; }
 .production-filters { display: flex; flex-wrap: wrap; gap: 12px; margin-block: 20px; }
 .production-filters input, .production-filters select { max-width: 100%; padding: 10px; }
 

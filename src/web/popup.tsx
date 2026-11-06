@@ -10,6 +10,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useState
 } from 'react';
@@ -109,21 +110,32 @@ export const Popup = ({
     }
   }, [popup]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const trigger = instances.get(id)?.trigger;
-    if (!open || !popup || !trigger) {
-      return;
-    }
+    if (!open || !popup || !trigger) return;
 
-    const [x, y] = placePopup(
-      placement,
-      trigger.getBoundingClientRect(),
-      popup.getBoundingClientRect()
-    );
-
-    popup.style.left = `${Math.round(x)}px`;
-    popup.style.top = `${Math.round(y)}px`;
-  }, [open, popup, placement, children]);
+    const position = () => {
+      const layout = placePopup(
+        placement,
+        trigger.getBoundingClientRect(),
+        popup.getBoundingClientRect(),
+        interactive,
+        trigger.closest('.popup')?.getBoundingClientRect()
+      );
+      popup.style.left = `${Math.round(layout.x)}px`;
+      popup.style.top = `${Math.round(layout.y)}px`;
+      popup.style.setProperty('--popup-available-height', `${layout.maxHeight}px`);
+    };
+    position();
+    // Content can grow when sources load or a details section is expanded.
+    const observer = new ResizeObserver(position);
+    observer.observe(popup);
+    window.addEventListener('resize', position);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', position);
+    };
+  }, [open, popup, placement, interactive, children]);
 
   if (!open) {
     return null;
@@ -174,6 +186,8 @@ let currentPopup: PopupInstance | null = null;
 let popupTimeoutId: number | null = null;
 let hoverTimeoutId: number | null = null;
 let pendingHoverTarget: PopupId | undefined;
+let pointerPosition: { x: number; y: number } | null = null;
+let openedAtPointer: { x: number; y: number } | null = null;
 
 const cancelHoverTransition = (): void => {
   if (hoverTimeoutId !== null) window.clearTimeout(hoverTimeoutId);
@@ -205,19 +219,16 @@ const moveTo = (nextId: PopupId | undefined): void => {
     }
   }
 
-  const shouldCancelPrevTimeout =
-    // Every popup is being closed, or...
-    !next ||
-    // We have to open something new.
-    lastCommonIndex < next.stack.length;
-  if (shouldCancelPrevTimeout && popupTimeoutId != null) {
+  // Changing targets also cancels a pending child when returning to its parent.
+  if (popupTimeoutId != null) {
     window.clearTimeout(popupTimeoutId);
     popupTimeoutId = null;
   }
-  if (next && lastCommonIndex < next.stack.length) {
+  if (next && lastCommonIndex < next.stack.length - 1) {
     // Each new trigger must be hovered deliberately, including nested popups.
     // Crossing a recently closed trigger must not bypass the opening delay.
     popupTimeoutId = window.setTimeout(() => {
+      openedAtPointer = pointerPosition;
       for (let i = lastCommonIndex + 1; i < next.stack.length; i++) {
         const nextId = next.stack[i];
         instances.get(nextId)?.setOpen(true);
@@ -242,8 +253,16 @@ const popupForTarget = (target: EventTarget | null): PopupId | undefined => {
 };
 
 const mouseMove = (e: MouseEvent): void => {
-  const id = popupForTarget(e.target);
-  const next = id ? instances.get(id) : undefined;
+  pointerPosition = { x: e.clientX, y: e.clientY };
+  let id = popupForTarget(e.target);
+  let next = id ? instances.get(id) : undefined;
+  // A newly mounted panel (or scrolled list) must not activate a link that
+  // happens to appear under the pointer. Small mouse jitter is not intent.
+  if (next && !next.open && next.stack.length > 1 && openedAtPointer &&
+    Math.hypot(e.clientX - openedAtPointer.x, e.clientY - openedAtPointer.y) < 10) {
+    id = next.stack.slice(0, -1).reverse().find(id => instances.get(id)?.open);
+    next = id ? instances.get(id) : undefined;
+  }
   // Returning to the same panel or entering a descendant cancels its closure.
   if (!currentPopup?.open || next?.stack.includes(currentPopup.id)) {
     moveTo(id);
@@ -273,13 +292,24 @@ const keyDown = (e: KeyboardEvent): void => {
 
 const closeAll = () => moveTo(undefined);
 
+const scroll = (e: Event): void => {
+  const panel = e.target instanceof Element ? e.target.closest('.popup') : null;
+  if (panel) {
+    // Keep the scrolled panel, but cancel pending previews for moving rows.
+    moveTo(popupForTarget(panel));
+    openedAtPointer = pointerPosition;
+  } else {
+    closeAll();
+  }
+};
+
 const register = (inst: PopupInstance): void => {
   if (instances.size === 0) {
     window.addEventListener('mousemove', mouseMove, { passive: true });
     window.addEventListener('focusin', focus);
     window.addEventListener('focusout', blur);
     window.addEventListener('keydown', keyDown);
-    window.addEventListener('scroll', closeAll, { passive: true });
+    window.addEventListener('scroll', scroll, { passive: true, capture: true });
   }
   instances.set(inst.id, inst);
 };
@@ -295,69 +325,71 @@ const unregister = (inst: PopupInstance): void => {
     window.removeEventListener('focusout', blur);
     window.removeEventListener('keydown', keyDown);
     cancelHoverTransition();
-    window.removeEventListener('scroll', closeAll);
+    window.removeEventListener('scroll', scroll, true);
   }
 };
 
-/**
- * Places a popup relative to a parent element.
- * @param placement The relative location of the popup.
- * @param parentRect The parent element's location on screen.
- * @param popupRect The popup element's location on screen.
- * @param separation The distance between the popup element and the edge of
- *        the parent element.
- * @param screenMargin The minimum distance between the popup element and
- *        the edge of the screen.
- * @return The location of the popup's top left corner.
- */
+/** Keep the trigger uncovered, even when a long preview needs to scroll. */
 function placePopup(
   placement: PopupPlacement,
-  parentRect: DOMRect,
-  popupRect: DOMRect,
-  screenMargin = 8
-): [number, number] {
-  let x: number;
-  switch (placement) {
-    case 'above':
-    case 'below':
-      x = parentRect.x + (parentRect.width - popupRect.width) / 2;
-      break;
-    case 'left':
-      x = parentRect.x - popupRect.width;
-      break;
-    case 'right':
-      x = parentRect.x + parentRect.width;
-      break;
-  }
-  x = clamp(
-    x,
-    screenMargin,
-    window.innerWidth - popupRect.width - screenMargin
-  );
+  trigger: DOMRect,
+  popup: DOMRect,
+  interactive = false,
+  parentPanel?: DOMRect,
+  margin = 8,
+  gap = 8
+): { x: number; y: number; maxHeight: number } {
+  const viewportHeight = Math.max(0, window.innerHeight - margin * 2);
+  const fitX = (x: number) => clamp(x, margin, window.innerWidth - popup.width - margin);
+  const fitY = (y: number) => clamp(y, margin, window.innerHeight - Math.min(popup.height, viewportHeight) - margin);
+  const space = {
+    right: window.innerWidth - trigger.right - gap - margin,
+    left: trigger.left - gap - margin,
+    below: Math.max(0, window.innerHeight - trigger.bottom - gap - margin),
+    above: Math.max(0, trigger.top - gap - margin),
+  };
 
-  let y: number;
-  switch (placement) {
-    case 'above':
-      y = parentRect.y - popupRect.height;
-      break;
-    case 'below':
-      y = parentRect.y + parentRect.height;
-      break;
-    case 'left':
-    case 'right':
-      y = parentRect.y + (parentRect.height - popupRect.height) / 2;
-      break;
+  // Cascading previews sit alongside their parent panel when possible, so its
+  // ingredient list stays readable. Otherwise anchor beside the actual link.
+  if (interactive) {
+    for (const anchor of parentPanel ? [parentPanel, trigger] : [trigger]) {
+      for (const side of ['right', 'left'] as const) {
+        const available = side === 'right'
+          ? window.innerWidth - anchor.right - gap - margin
+          : anchor.left - gap - margin;
+        if (available >= popup.width) return {
+          x: side === 'right' ? anchor.right + gap : anchor.left - gap - popup.width,
+          y: fitY(trigger.top),
+          maxHeight: viewportHeight,
+        };
+      }
+    }
+  } else if (placement === 'left' || placement === 'right') {
+    if (space[placement] >= popup.width) return {
+      x: placement === 'right' ? trigger.right + gap : trigger.left - gap - popup.width,
+      y: fitY(trigger.top + (trigger.height - popup.height) / 2),
+      maxHeight: viewportHeight,
+    };
   }
-  y = clamp(
-    y,
-    screenMargin,
-    window.innerHeight - popupRect.height - screenMargin
-  );
 
-  return [x, y];
+  // On narrow screens choose the larger vertical space and constrain the
+  // panel to it instead of clamping a full-height panel over the hovered link.
+  const preferred = placement === 'above' ? 'above' : 'below';
+  const opposite = preferred === 'above' ? 'below' : 'above';
+  const side = space[preferred] >= popup.height ? preferred
+    : space[opposite] >= popup.height ? opposite
+    : space.above > space.below ? 'above' : 'below';
+  const maxHeight = space[side];
+  return {
+    x: fitX(trigger.left + (trigger.width - popup.width) / 2),
+    y: side === 'below' ? trigger.bottom + gap
+      : trigger.top - gap - Math.min(popup.height, maxHeight),
+    maxHeight,
+  };
 }
 
 function clamp(value: number, min: number, max: number): number {
+  max = Math.max(min, max);
   if (value < min) {
     return min;
   }
