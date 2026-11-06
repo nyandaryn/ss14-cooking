@@ -17,10 +17,12 @@ export const medicineGroups = [
   { id: 'neurological', title: ['Мозг, зрение и нервная система', 'Brain, eyes & nervous system'], basic: ['Oculine'], advanced: ['Mannitol', 'Psicodine', 'Synaptizine', 'Ethyloxyephedrine', 'Diphenylmethylamine', 'Cognizine', 'Miniozine'] },
   { id: 'infection', title: ['Инфекции', 'Infections'], basic: ['Ambuzol'], advanced: ['AmbuzolPlus'] },
   { id: 'pressure', title: ['Защита от давления', 'Pressure protection'], basic: ['Barozine'], advanced: ['BarozinePlus'] },
-  { id: 'other', title: ['Прочие и вспомогательные реагенты', 'Other & supporting reagents'], basic: ['Cryptobiolin', 'Lipozine', 'Holywater', 'Unholywater'], advanced: ['ApotheosoticExtract', 'ReagentArrows'] },
+  { id: 'narcotics', title: ['Наркотики', 'Narcotics'], basic: [], advanced: [] },
+  { id: 'other', title: ['Прочее', 'Other chemistry'], basic: ['Cryptobiolin', 'Lipozine', 'Holywater', 'Unholywater'], advanced: ['ApotheosoticExtract', 'ReagentArrows'] },
 ] as const;
 
-export const medicineClassification = (id: string) => {
+export const medicineClassification = (id: string, sourceGroup?: string) => {
+  if (sourceGroup === 'Narcotics') return { group: 'narcotics' as const, tier: 'basic' as const };
   for (const group of medicineGroups) {
     if ((group.basic as readonly string[]).includes(id)) return { group: group.id, tier: 'basic' as const };
     if ((group.advanced as readonly string[]).includes(id)) return { group: group.id, tier: 'advanced' as const };
@@ -32,7 +34,7 @@ export const medicineClassification = (id: string) => {
 export const groupMedicines = (reagents: readonly CatalogReagent[], selected = '') => medicineGroups
   .filter(g => !selected || g.id === selected)
   .map(g => ({ ...g,
-    basicItems: reagents.filter(r => { const c = medicineClassification(r.id); return c.group === g.id && c.tier === 'basic'; }),
-    advancedItems: reagents.filter(r => { const c = medicineClassification(r.id); return c.group === g.id && c.tier === 'advanced'; }),
+    basicItems: reagents.filter(r => { const c = medicineClassification(r.id, r.group); return c.group === g.id && c.tier === 'basic'; }),
+    advancedItems: reagents.filter(r => { const c = medicineClassification(r.id, r.group); return c.group === g.id && c.tier === 'advanced'; }),
   }))
   .filter(g => g.basicItems.length + g.advancedItems.length > 0);

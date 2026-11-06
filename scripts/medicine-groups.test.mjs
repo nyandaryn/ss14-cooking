@@ -32,3 +32,8 @@ test('New source medicines remain discoverable', () => {
   assert.deepEqual(medicineClassification('NewMedicine'), { group: 'other', tier: 'basic' });
   assert.equal(groupMedicines([{ id: 'NewMedicine' }])[0].basicItems[0].id, 'NewMedicine');
 });
+test('Narcotics get their own category; all remaining chemistry remains accessible', () => {
+  const grouped = groupMedicines([{ id: 'NewDrug', group: 'Narcotics' }, { id: 'Water', group: 'Elements' }]);
+  assert.equal(grouped.find(g => g.id === 'narcotics').basicItems[0].id, 'NewDrug');
+  assert.equal(grouped.find(g => g.id === 'other').basicItems[0].id, 'Water');
+});

@@ -1,3 +1,4 @@
+import { MedicineEffects } from './medicine-effects';
 import { groupMedicines, medicineGroups } from './medicine-groups';
 import { CatalogIcon } from './sprites/catalog';
 import { DepartmentHeading, CatalogSelection } from './department-heading';
@@ -142,10 +143,11 @@ const Chemistry = ({ department }: { department: 'medicine' | 'botanical' | 'dri
     for (const r of catalog.reactions) for (const p of r.products) result.set(p.reagent.id, [...result.get(p.reagent.id) ?? [], r]);
     return result;
   }, [catalog]);
-  const roots = new Set(catalog[department]);
+  const roots = new Set(department === 'medicine' ? catalog.reagents.map(r => r.id) : catalog[department]);
   const query = normalizeSearchText(search);
   const results = catalog.reagents.filter(r => roots.has(r.id) && (!onlyRecipes || byProduct.has(r.id)) && normalizeSearchText(`${r.id} ${r.name} ${r.description}`).includes(query)).sort((a, b) => a.name.localeCompare(b.name));
   const grouped = groupMedicines(results, medicineSection);
+  const otherReactions = department === 'medicine' && (!medicineSection || medicineSection === 'other') ? catalog.reactions.filter(r => !r.products.length && normalizeSearchText([r.id, ...r.reactants.map(v => v.reagent.name)].join(' ')).includes(query)) : [];
   const visibleCount = department === 'medicine' ? grouped.reduce((n, g) => n + g.basicItems.length + g.advancedItems.length, 0) : results.length;
   const card = (id: string) => {
     const r = catalog.reagents.find(r => r.id === id)!;
@@ -153,6 +155,7 @@ const Chemistry = ({ department }: { department: 'medicine' | 'botanical' | 'dri
     return <article className='catalog-card chemical-card' key={id}>
       <div className='catalog-card-heading'><div><h2><ResourceLink kind='reagent' id={r.id}>{r.name}</ResourceLink></h2><span className='catalog-id'>{r.id}</span></div></div>
       {r.description && <p>{r.description}</p>}
+      {department === 'medicine' && <MedicineEffects reagent={r}/>}
       {recipes.length ? recipes.map(recipe => <ReactionCard key={recipe.id} reaction={recipe}/>) : <p className='catalog-note'>{text('Рецепт синтеза в сборке не найден. Реагент может быть доступен из раздатчика, добычи или других источников.', 'No synthesis recipe found in this build. It may come from a dispenser, extraction or other sources.')}</p>}
       <RelatedResources kind='reagent' id={id}/>
     </article>;
@@ -178,7 +181,8 @@ const Chemistry = ({ department }: { department: 'medicine' | 'botanical' | 'dri
       <h2>{text(g.title[0], g.title[1])}</h2>
       {g.basicItems.length > 0 && <><h3>{text('Базовые', 'Basic')}</h3><div className='catalog-grid'>{g.basicItems.map(r => card(r.id))}</div></>}
       {g.advancedItems.length > 0 && <div className='medicine-advanced'><h3>{text('Продвинутые', 'Advanced')}</h3><div className='catalog-grid'>{g.advancedItems.map(r => card(r.id))}</div></div>}
-    </section>) : <Empty/>) : (results.length ? <div className='catalog-grid'>{results.map(r => card(r.id))}</div> : <Empty/>)}
+    </section>) : otherReactions.length ? null : <Empty/>) : (results.length ? <div className='catalog-grid'>{results.map(r => card(r.id))}</div> : <Empty/>)}
+    {otherReactions.length > 0 && <section className='medicine-group'><h2>{text('Прочее: реакции без реагента-продукта', 'Other: reactions without reagent products')}</h2><div className='catalog-grid'>{otherReactions.map(r => <article className='catalog-card' key={r.id}><ReactionCard reaction={r}/></article>)}</div></section>}
     </>}
   </>;
 };

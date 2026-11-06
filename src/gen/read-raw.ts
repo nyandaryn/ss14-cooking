@@ -41,8 +41,8 @@ export interface RawGameData {
 }
 
 // SS14 uses `!type:T` tags to create values of type `T`.
-// The yaml library we're using provides no way to create tags dynamically,
-// hence we have to specify all *relevant* type tags ourselves.
+// Register tags found in each source file so effect and condition types survive
+// serialization, including empty tagged effects such as `!type:EyeDamage`.
 // We implement `!type:T` tags by assigning 'T' to the object's '!type' key.
 
 const typeTag = (name: string): CollectionTag => ({
@@ -95,9 +95,9 @@ export const readRawGameData = (yamlPaths: string[]): RawGameData => {
     }
 
     const doc = parse(source, {
-      // I don't care about unresolved tags
+      // Unrelated non-type tags are not part of the catalog.
       logLevel: 'silent',
-      customTags,
+      customTags: [...new Set([...customTags.map(t => t.tag.slice(6)), ...Array.from(source.matchAll(/!type:([A-Za-z0-9_]+)/g), m => m[1])])].flatMap(name => [typeTag(name), { tag: `!type:${name}`, resolve: () => ({ '!type': name }) }]),
     });
 
     if (!Array.isArray(doc)) {

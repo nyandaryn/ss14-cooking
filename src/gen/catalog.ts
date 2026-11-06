@@ -80,13 +80,26 @@ export const buildCatalog = (
     }
     return undefined;
   };
+  type Metabolism = { metabolismRate?: number; effects?: Record<string, unknown>[] };
+  const metabolisms = (id: string, seen = new Set<string>()): Record<string, Metabolism> => {
+    if (seen.has(id)) return {};
+    seen.add(id);
+    const r = raw.reagents.get(id as ReagentId);
+    if (!r) return {};
+    const parents = typeof r.parent === 'string' ? [r.parent] : Array.isArray(r.parent) ? r.parent : [];
+    const result: Record<string, Metabolism> = {};
+    for (const parent of parents) for (const [stage, entry] of Object.entries(metabolisms(parent, new Set(seen)))) result[stage] = { ...entry, ...result[stage] };
+    for (const [stage, entry] of Object.entries((r.metabolisms ?? {}) as Record<string, Metabolism>)) result[stage] = { ...result[stage], ...entry };
+    return result;
+  };
   const reagents = Array.from(raw.reagents.values()).filter(r => !r.abstract).map(r => ({
     ...reagentRef(r.id), color: String(inherited(r.id, 'color') ?? '#ffffff'), group: String(inherited(r.id, 'group') ?? ''),
+    metabolisms: Object.entries(metabolisms(r.id)).map(([stage, m]) => ({ stage, rate: m.metabolismRate ?? 0.5, effects: m.effects ?? [] })),
     description: translate(typeof r.desc === 'string' ? r.desc : undefined) ?? '',
   }));
   // Keep all multi-output reactions and prerequisite chemistry, without the
   // cooking generator's one-result / food-only restrictions.
-  const reactions = raw.reactions.filter(r => Object.keys(r.products ?? {}).length > 0).map(r => ({
+  const reactions = raw.reactions.map(r => ({
     id: r.id,
     reactants: Object.entries(r.reactants ?? {}).map(([id, v]) => ({ reagent: reagentRef(id), amount: v.amount, catalyst: v.catalyst ?? false })),
     products: Object.entries(r.products ?? {}).map(([id, amount]) => ({ reagent: reagentRef(id), amount })),

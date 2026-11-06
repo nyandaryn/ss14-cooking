@@ -2732,7 +2732,7 @@ select {
 .catalog-controls input[type='search'] { flex: 1 1 18rem; min-width: 0; }
 .catalog-controls select { color: var(--fg); background: var(--bg-level-1); border: 1px solid var(--fg-subtle); padding: .55rem; border-radius: 4px; font: inherit; max-width: 100%; }
 .catalog-controls label { display: flex; gap: .4rem; align-items: center; }
-.catalog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr)); gap: 1rem; align-items: start; }
+.catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 25rem), 1fr)); gap: 1rem; align-items: start; }
 .catalog-card { background: var(--bg-level-1); border: 1px solid var(--bg-level-2); border-top: 3px solid var(--department-accent); border-radius: 6px; padding: 1.1rem; min-width: 0; overflow-wrap: anywhere; }
 .catalog-card-heading { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
 .catalog-card-heading h2 { margin: 0; font-size: 1.2rem; }
@@ -2811,3 +2811,10 @@ select {
 .medicine-sections button[aria-pressed="true"] { outline: 2px solid #72b98b; background: var(--bg-level-2); }
 .medicine-group { margin-block: 32px; }
 .medicine-advanced { border-top: 2px solid #8c9da6; margin-top: 24px; padding-top: 16px; }
+
+.medicine-effects { border-top: 1px solid #555; margin-block: 16px; padding-top: 8px; }
+.medicine-effects li { margin-block: 7px; overflow-wrap: anywhere; }
+.medicine-effects h4 { margin-block: 12px 8px; }
+
+.catalog-grid > .catalog-card { width: 100%; max-width: 28rem; box-sizing: border-box; }
+.chemical-card { max-width: 40rem; }

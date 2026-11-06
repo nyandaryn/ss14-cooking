@@ -2,7 +2,8 @@ import { ReactionCard } from './chemical-reaction';
 import { CatalogIcon } from './sprites/catalog';
 import { ManufacturingCard, VendorSource } from './production';
 import { findRelatedResources, hasRelatedResources, RelatedData, ResourceKind } from './related-resources';
-import { ReactNode, useMemo, useState } from 'react';
+import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
+import { RecipePopup, ReagentInfoPopup, EntitySourcesPopup } from './recipe/popup';
 import { Link, useSearchParams } from 'react-router';
 import { Recipe as RecipeData } from '../types';
 import { DepartmentCatalog } from '../catalog-types';
@@ -35,10 +36,30 @@ export const useCatalogLinks = () => {
   };
 };
 
+const PreviewAncestors = createContext<readonly string[]>([]);
 export const ResourceLink = ({ id, kind, children }: { id: string; kind: 'entity' | 'reagent'; children: ReactNode }) => {
   const links = useCatalogLinks();
+  const data = useGameData();
   const { lang } = useLang();
-  return <Link to={links[kind](id)} aria-label={children === '↗' ? `${lang === 'ru' ? 'Источники и рецепты' : 'Sources and recipes'}: ${id}` : undefined}>{children !== '↗' && <CatalogIcon kind={kind} id={id}/>} {children}</Link>;
+  const ancestors = useContext(PreviewAncestors);
+  const key = `${kind}:${id}`;
+  const link = <Link to={links[kind](id)} aria-label={children === '↗' ? `${lang === 'ru' ? 'Источники и рецепты' : 'Sources and recipes'}: ${id}` : undefined}>{children !== '↗' && <CatalogIcon kind={kind} id={id}/>} {children}</Link>;
+  // Arrow links already sit inside cooking ingredient previews. Avoid duplicate
+  // triggers there, and cycles when a preview links to its own result.
+  if (children === '↗' || ancestors.includes(key)) return link;
+  const recipes = data.recipeList.filter(r => kind === 'entity' ? r.solidResult === id : r.reagentResult === id).map(r => r.id);
+  let preview;
+  if (kind === 'reagent') {
+    const hasSources = recipes.length || data.catalog.reactions.some(r => r.products.some(p => p.reagent.id === id)) || data.catalog.extractions.some(e => e.reagent.id === id) || data.catalog.manufacturing.some(r => r.reagentResults.some(p => p.reagent.id === id));
+    if (!hasSources) return link;
+    preview = <ReagentInfoPopup reagentId={id} recipes={recipes} sources={[]}>{link}</ReagentInfoPopup>;
+  } else if (recipes.length) {
+    preview = <RecipePopup id={recipes}>{link}</RecipePopup>;
+  } else {
+    if (!hasRelatedResources(findRelatedResources(data, id, kind))) return link;
+    preview = <EntitySourcesPopup id={id}>{link}</EntitySourcesPopup>;
+  }
+  return <PreviewAncestors.Provider value={[...ancestors, key]}>{preview}</PreviewAncestors.Provider>;
 };
 
 /** Render the panel only when it contains useful links; mount lists on demand. */

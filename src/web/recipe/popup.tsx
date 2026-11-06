@@ -1,3 +1,4 @@
+import { MedicineEffects } from '../medicine-effects';
 import { ManufacturingCard } from '../production';
 import { ReactionCard } from '../chemical-reaction';
 import { RelatedBody } from '../catalog-links';
@@ -76,6 +77,7 @@ export const ReagentInfoPopup = ({
       {catalog.manufacturing?.filter(r => r.reagentResults?.some(p => p.reagent.id === reagentId)).map(r => <ManufacturingCard key={r.id} recipe={r}/>)}
       {catalog.reactions.filter(r => r.products.some(p => p.reagent.id === reagentId) && !recipes?.includes(`r!${r.id}`)).map(r => <article className='catalog-card' key={r.id}>
         <h2><ResourceLink kind='reagent' id={reagentId}>{catalog.reagents.find(v => v.id === reagentId)?.name ?? reagentId}</ResourceLink></h2>
+        {catalog.reagents.find(v => v.id === reagentId && v.group === 'Medicine') && <MedicineEffects reagent={catalog.reagents.find(v => v.id === reagentId)!}/>}
         <ReactionCard reaction={r}/>
       </article>)}
       {catalog.extractions.some(e => e.reagent.id === reagentId) && <article className='catalog-card'><h3>{lang === 'ru' ? 'Получение в блендере' : 'Blender extraction'}</h3><ul>{catalog.extractions.filter(e => e.reagent.id === reagentId).map((e,i) => <li key={i}><ResourceLink kind='entity' id={e.entity.id}>{e.entity.name}</ResourceLink> — {e.method === 'juice' ? (lang === 'ru' ? 'выжать сок' : 'juice') : (lang === 'ru' ? 'измельчить' : 'grind')}, {e.amount} u</li>)}</ul></article>}
