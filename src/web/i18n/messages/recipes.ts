@@ -266,6 +266,14 @@ export const en = {
 
   // --- Recipe explorer ---
   explorerLabel: 'Recipe explorer',
+  /** Short verbs for reaction mixer categories, shown beside the vessel. */
+  mixerVerbs: {
+    Shake: 'Shake',
+    Stir: 'Stir',
+    Centrifuge: 'Centrifuge',
+    Electrolysis: 'Electrolysis',
+    Holy: 'Bless',
+  } as Record<string, string>,
   madeWith: 'Made with',
   usedIn: 'Used in',
 
@@ -485,6 +493,13 @@ export const ru: RecipesMessages = {
 
   // --- Recipe explorer ---
   explorerLabel: 'Связанные рецепты',
+  mixerVerbs: {
+    Shake: 'Встряхнуть',
+    Stir: 'Перемешать',
+    Centrifuge: 'Центрифуга',
+    Electrolysis: 'Электролиз',
+    Holy: 'Освятить',
+  },
   madeWith: 'Из чего',
   usedIn: 'Куда идёт',
 

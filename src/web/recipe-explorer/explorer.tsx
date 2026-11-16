@@ -1,10 +1,7 @@
 import {
-  Dispatch,
   ReactElement,
   Ref,
-  SetStateAction,
   memo,
-  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -19,11 +16,12 @@ import { CloseIcon } from '../icons';
 import { Recipe } from '../recipe';
 import { compareByName } from '../sort';
 import { Tooltip } from '../tooltip';
-import { ExploreFnContext, ExploreRecipeFn } from './context';
 
-export interface Props {
-  id: string;
-  setRecipe: Dispatch<SetStateAction<string | null>>;
+export interface ExplorerShellProps {
+  /** Re-centres the layout whenever the explored node changes. */
+  nodeKey: string;
+  onClose: () => void;
+  children: (ref: Ref<ExplorerNodeHandle>) => ReactElement;
 }
 
 const RecipeMargin = 8;
@@ -33,17 +31,14 @@ const RecipeMargin = 8;
  */
 const RelatedRecipeMargin = 4;
 
-export const RecipeExplorer = memo(({
-  id,
-  setRecipe,
-}: Props): ReactElement => {
-  const exploreFn = useCallback<ExploreRecipeFn>((id: string) => {
-    // Selecting an already open recipe is idempotent; only Close dismisses it.
-    setRecipe(id);
-  }, [setRecipe]);
-
+/** Full-screen overlay shared by the cooking and chemistry explorers. */
+export const ExplorerShell = ({
+  nodeKey,
+  onClose,
+  children,
+}: ExplorerShellProps): ReactElement => {
   const mainRef = useRef<HTMLElement>(null);
-  const recipeRef = useRef<ExploredRecipeHandle>(null);
+  const nodeRef = useRef<ExplorerNodeHandle>(null);
   const t = useT();
 
   useEffect(() => {
@@ -51,14 +46,14 @@ export const RecipeExplorer = memo(({
     main.focus();
 
     const positionRecipeToFit = () => {
-      const recipe = recipeRef.current;
-      if (!recipe) {
+      const node = nodeRef.current;
+      if (!node) {
         return;
       }
 
       const viewportWidth = document.documentElement.clientWidth;
       const viewportCenterX = viewportWidth / 2;
-      const { totalWidth, centerOffset } = recipe.getDimensions();
+      const { totalWidth, centerOffset } = node.getDimensions();
 
       const availableSpace = viewportWidth - 2 * RecipeMargin - totalWidth;
 
@@ -73,7 +68,7 @@ export const RecipeExplorer = memo(({
       const x = newLeft + centerOffset - viewportCenterX;
 
       // Reset the recipe offset when the window is resized
-      recipe.move(x, 0);
+      node.move(x, 0);
     };
 
     positionRecipeToFit();
@@ -81,42 +76,48 @@ export const RecipeExplorer = memo(({
     return () => {
       window.removeEventListener('resize', positionRecipeToFit);
     };
-  }, [id]);
+  }, [nodeKey]);
 
   // Always prevent navigation while this is open
   useBlocker(true);
 
   return (
-    <ExploreFnContext.Provider value={exploreFn}>
-      <FocusTrap>
-        <section
-          className='explorer'
-          aria-label={t.recipes.explorerLabel}
-          tabIndex={-1}
-          ref={mainRef}
-        >
-          <ExploredRecipe key={id} id={id} ref={recipeRef}/>
+    <FocusTrap>
+      <section
+        className='explorer'
+        aria-label={t.recipes.explorerLabel}
+        tabIndex={-1}
+        ref={mainRef}
+      >
+        {children(nodeRef)}
 
-          <Tooltip text={t.recipes.closeExplorer} placement='left' provideLabel>
-            <button
-              className='explorer_close'
-              onClick={() => setRecipe(null)}
-            >
-              <CloseIcon/>
-            </button>
-          </Tooltip>
-        </section>
-      </FocusTrap>
-    </ExploreFnContext.Provider>
+        <Tooltip text={t.recipes.closeExplorer} placement='left' provideLabel>
+          <button className='explorer_close' onClick={onClose}>
+            <CloseIcon/>
+          </button>
+        </Tooltip>
+      </section>
+    </FocusTrap>
   );
-});
+};
+
+export interface Props {
+  id: string;
+  onClose: () => void;
+}
+
+export const RecipeExplorer = memo(({ id, onClose }: Props): ReactElement =>
+  <ExplorerShell nodeKey={id} onClose={onClose}>
+    {ref => <ExploredRecipe key={id} id={id} ref={ref}/>}
+  </ExplorerShell>
+);
 
 interface ExploredRecipeProps {
   id: string;
-  ref: Ref<ExploredRecipeHandle>;
+  ref: Ref<ExplorerNodeHandle>;
 }
 
-interface ExploredRecipeHandle {
+export interface ExplorerNodeHandle {
   getDimensions(): ExploredRecipeDimensions;
   move(x: number, y: number): void;
 }
@@ -141,7 +142,6 @@ const ExploredRecipe = memo(({
     entityMap,
     reagentMap,
   } = useGameData();
-  const t = useT();
 
   const recipe = recipeMap.get(id);
   if (!recipe) {
@@ -156,8 +156,6 @@ const ExploredRecipe = memo(({
       return compareRecipes(recipeA, recipeB);
     };
   }, [recipeMap, entityMap, reagentMap]);
-
-  const [activeSection, setActiveSection] = useState<ActiveSection>(null);
 
   const madeWith: readonly string[] = useMemo(() => {
     const result: string[] = [];
@@ -186,6 +184,41 @@ const ExploredRecipe = memo(({
     return recipes ? recipes.slice().sort(compare) : [];
   }, [recipe, recipesBySolidIngredient, recipesByReagentIngredient, compare]);
 
+  return (
+    <ExplorerNode
+      ref={ref}
+      main={<Recipe id={id} skipDefaultHeaderAction/>}
+      madeWith={madeWith}
+      usedIn={usedIn}
+      renderItem={renderRelatedRecipe}
+    />
+  );
+});
+
+const renderRelatedRecipe = (id: string): ReactElement =>
+  <Recipe key={id} id={id} skipDefaultHeaderAction/>;
+
+export interface ExplorerNodeProps {
+  ref: Ref<ExplorerNodeHandle>;
+  /** The explored card; it must carry the `recipe` class for the layout. */
+  main: ReactElement;
+  madeWith: readonly string[];
+  usedIn: readonly string[];
+  /** Renders a keyed related card (with the `recipe` class) for an ID. */
+  renderItem: (id: string) => ReactElement;
+}
+
+/** The explored card with its "made with" and "used in" lists. */
+export const ExplorerNode = ({
+  ref,
+  main,
+  madeWith,
+  usedIn,
+  renderItem,
+}: ExplorerNodeProps): ReactElement => {
+  const t = useT();
+  const [activeSection, setActiveSection] = useState<ActiveSection>(null);
+
   const mainRef = useRef<HTMLDivElement>(null);
   const madeWithRef = useRef<HTMLDivElement>(null);
   const usedInRef = useRef<HTMLDivElement>(null);
@@ -208,7 +241,7 @@ const ExploredRecipe = memo(({
     return () => {
       window.removeEventListener('resize', resize);
     };
-  }, [recipe, madeWith, usedIn]);
+  }, [madeWith, usedIn]);
 
   useImperativeHandle(ref, () => ({
     getDimensions(): ExploredRecipeDimensions {
@@ -247,7 +280,7 @@ const ExploredRecipe = memo(({
 
   return (
     <div className='explorer_main' ref={mainRef}>
-      <Recipe id={id} skipDefaultHeaderAction/>
+      {main}
 
       {madeWith.length > 0 && <>
         <div
@@ -269,9 +302,7 @@ const ExploredRecipe = memo(({
           ref={madeWithRef}
         >
           <div className='explorer_list-inner'>
-            {madeWith.map(id =>
-              <Recipe key={id} id={id} skipDefaultHeaderAction/>
-            )}
+            {madeWith.map(renderItem)}
           </div>
         </div>
       </>}
@@ -296,15 +327,13 @@ const ExploredRecipe = memo(({
           ref={usedInRef}
         >
           <div className='explorer_list-inner'>
-            {usedIn.map(id =>
-              <Recipe key={id} id={id} skipDefaultHeaderAction/>
-            )}
+            {usedIn.map(renderItem)}
           </div>
         </div>
       </>}
     </div>
   );
-});
+};
 
 const getActiveSection = (
   selected: ActiveSection,

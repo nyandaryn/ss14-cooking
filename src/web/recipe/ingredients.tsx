@@ -1,6 +1,6 @@
 import { ResourceLink } from '../catalog-links';
 import { ReactElement, memo } from 'react';
-import { Reagent, ReagentIngredient as ReagentIngredientData } from '../../types';
+import { ReagentIngredient as ReagentIngredientData } from '../../types';
 import { useGameData } from '../context';
 import { useLang } from '../i18n';
 import { Popup, usePopupTrigger } from '../popup';
@@ -98,7 +98,13 @@ export const ReagentIngredient = ({
 }: ReagentIngredientProps): ReactElement => {
   const { reagentMap, recipesByReagentResult, catalog } = useGameData();
   const { locale, t } = useLang();
-  const reagent = reagentMap.get(id)!;
+  // Drinks and chemistry reuse this row for reagents that no cooking recipe
+  // touches, so fall back to the department catalog.
+  const cookingReagent = reagentMap.get(id);
+  const reagent = {
+    name: cookingReagent?.name ?? catalog.reagents.find(r => r.id === id)?.name ?? id,
+    sources: cookingReagent?.sources ?? [],
+  };
   const relatedRecipes = recipesByReagentResult.get(id);
 
   const formattedAmount = t.recipes.units(

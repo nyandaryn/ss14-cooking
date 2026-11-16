@@ -13,6 +13,7 @@ import { normalizeSearchText } from './helpers';
 import { useLang } from './i18n';
 import { RecipeList } from './recipe-list';
 import { ReactionCard } from './chemical-reaction';
+import { ExploreReactionButton } from './recipe-explorer';
 
 const useText = () => {
   const { lang } = useLang();
@@ -160,7 +161,7 @@ const Chemistry = ({ department }: { department: 'medicine' | 'botanical' | 'dri
       {r.description && <p>{r.description}</p>}
       {department === 'medicine' && <MedicineEffects reagent={r}/>}
       <PlantEffects id={r.id}/>
-      {recipes.map(recipe => <ReactionCard key={recipe.id} reaction={recipe}/>)}
+      {recipes.map(recipe => <ReactionCard key={recipe.id} reaction={recipe} action={<ExploreReactionButton id={recipe.id}/>}/>)}
       <ExtractionRecipes id={id}/>
       {!recipes.length && !extractable.has(id) && <p className='catalog-note'>{text('Рецепт синтеза в сборке не найден. Реагент может быть доступен из раздатчика, добычи или других источников.', 'No synthesis recipe found in this build. It may come from a dispenser, extraction or other sources.')}</p>}
       <RelatedResources kind='reagent' id={id}/>
@@ -181,14 +182,14 @@ const Chemistry = ({ department }: { department: 'medicine' | 'botanical' | 'dri
       <input type='search' value={search} onChange={e => setSearch(e.target.value)} aria-label={text('Поиск реагентов', 'Search reagents')} placeholder={text('Название, ID или описание…', 'Name, ID or description…')}/>
       <label><input type='checkbox' checked={onlyRecipes} onChange={e => setOnlyRecipes(e.target.checked)}/> {text('Только с рецептом', 'With recipe')}</label>
     </div>
-    <p className='catalog-note'>{text('Количество указано в единицах реагента (u). Нажмите на ингредиент, чтобы посмотреть его синтез. Катализаторы не расходуются.', 'Quantities are reagent units (u). Select an ingredient to inspect its synthesis. Catalysts are not consumed.')}</p>
+    <p className='catalog-note'>{text('Количество указано в единицах реагента (u). Нажмите на ингредиент, чтобы посмотреть его синтез. Катализаторы не расходуются.', 'Quantities are reagent units (u). Select an ingredient to inspect its synthesis. Catalysts are not consumed.')}{text(' Кнопка со схемой у рецепта показывает всю цепочку: из чего делаются ингредиенты и куда идёт результат.', ' The tree button on a recipe shows the whole chain: how its ingredients are made and where the result is used.')}</p>
     <p role='status'>{text('Найдено реагентов', 'Reagents found')}: {visibleCount}</p>
     {department === 'medicine' ? (grouped.length ? grouped.map(g => <section className='medicine-group' key={g.id}>
       <h2>{text(g.title[0], g.title[1])}</h2>
       {g.basicItems.length > 0 && <><h3>{text('Базовые', 'Basic')}</h3><div className='catalog-grid'>{g.basicItems.map(r => card(r.id))}</div></>}
       {g.advancedItems.length > 0 && <div className='medicine-advanced'><h3>{text('Продвинутые', 'Advanced')}</h3><div className='catalog-grid'>{g.advancedItems.map(r => card(r.id))}</div></div>}
     </section>) : otherReactions.length ? null : <Empty/>) : (results.length ? <div className='catalog-grid'>{results.map(r => card(r.id))}</div> : <Empty/>)}
-    {otherReactions.length > 0 && <section className='medicine-group'><h2>{text('Прочее: реакции без реагента-продукта', 'Other: reactions without reagent products')}</h2><div className='catalog-grid'>{otherReactions.map(r => <article className='catalog-card' key={r.id}><ReactionCard reaction={r}/></article>)}</div></section>}
+    {otherReactions.length > 0 && <section className='medicine-group'><h2>{text('Прочее: реакции без реагента-продукта', 'Other: reactions without reagent products')}</h2><div className='catalog-grid'>{otherReactions.map(r => <article className='catalog-card' key={r.id}><ReactionCard reaction={r} action={<ExploreReactionButton id={r.id}/>}/></article>)}</div></section>}
     </>}
   </>;
 };

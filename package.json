@@ -19,7 +19,9 @@
     "postgen:recipes": "npm run gen:seo",
     "predeploy": "npm run gen:seo",
     "test:seo": "node --test scripts/seo.test.mjs",
-    "test:encyclopedia": "node --test scripts/encyclopedia.test.mjs"
+    "test:encyclopedia": "node --test scripts/encyclopedia.test.mjs",
+    "test:reactions": "node --test scripts/reaction-graph.test.mjs",
+    "test:borgs": "node --test scripts/borg-tree.test.mjs"
   },
   "bin": {
     "ss14-cookbook-server": "./bin/server.js"

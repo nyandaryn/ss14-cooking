@@ -28,6 +28,12 @@ const chemistry = ids => ids.map(id => {
 const medical = r => r.method === 'microwave' && [r.subtype].flat().includes('MedicalAssembler');
 const content = {
   '/production': () => (data.catalog.manufacturing ?? []).map(r => `<article><h2>${esc(r.result.name)}</h2><p>${r.materials.map(m => `${esc(m.material.name)}: ${m.amount}`).join(', ')}</p><p>${r.machines.map(m => `${esc(m.machine.name)} (${esc(m.access)})`).join(', ')}</p>${r.entityResult ? entityLink(r.result) : (r.reagentResults ?? []).map(p => reagentLink(p.reagent)).join(', ')}</article>`).join(''),
+  '/cyborgs': () => {
+    const borgs = data.catalog.borgs ?? { chassis: [], modules: [] };
+    const moduleName = id => esc(borgs.modules.find(m => m.id === id)?.name ?? id);
+    return borgs.chassis.map(c => `<article><h2><a href="/cyborgs?chassis=${encodeURIComponent(c.id)}">${esc(c.name)}</a></h2><p>${esc(c.description)}</p>${c.slots != null ? `<p>Слотов модулей: ${c.slots}.</p>` : ''}<p>Встроенные модули: ${c.defaultModules.map(moduleName).join(', ') || 'нет'}.</p><p>Модули: ${borgs.modules.filter(m => m.tags.some(t => c.whitelist.includes(t))).map(m => moduleName(m.id)).join(', ')}.</p></article>`).join('')
+      + borgs.modules.map(m => `<article><h3><a href="/cyborgs?module=${encodeURIComponent(m.id)}">${esc(m.name)}</a></h3><p>${esc(m.description)}</p>${m.items.length ? `<p>Даёт: ${m.items.map(i => esc(i.name)).join(', ')}.</p>` : ''}</article>`).join('');
+  },
   '/': () => data.recipes.filter(r => !medical(r)).map(recipe).join(''),
   '/drinks': () => chemistry(data.catalog.drinks),
   '/medicine': () => chemistry(data.catalog.reagents.map(r => r.id)) + '<h2>Мед-о-мат</h2>' + data.recipes.filter(medical).map(recipe).join(''),
@@ -116,6 +122,7 @@ The JSON datasets contain recipes, entities, reagents and a department catalog. 
 - [Drinks](${pageUrl('/drinks')}): Cocktails, ratios, mixing requirements and ingredient sources.
 - [Medicine](${pageUrl('/medicine')}): Medicine effects, healing amounts per metabolism cycle, overdose conditions, narcotics and all other chemical recipes.
 - [Production and vending machines](${pageUrl('/production')}): Materials, machines, unlocks, hacked recipes and item sources.
+- [Cyborg modules](${pageUrl('/cyborgs')}): Module tree by chassis type: built-in modules, exosuit fabricator recipes, research tiers and antagonist chassis.
 - [Botany](${pageUrl('/botany')}): Plants, species mutations, produce and harvest methods.
 - [WizDen](${href('/?fork=wizden')}): Original Wizard's Den build.
 

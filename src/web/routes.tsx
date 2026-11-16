@@ -1,3 +1,4 @@
+import { Cyborgs } from './cyborgs';
 import { EncyclopediaPage } from './encyclopedia';
 import { Production } from './production';
 import { ReferencePage } from './catalog-links';
@@ -23,6 +24,7 @@ export const AppRoutes = [
       { path: '/gases', element: <EncyclopediaPage section='gases'/>, handle: { name: 'gases' } satisfies RouteHandle },
 
       { path: '/production', element: <Production/>, handle: { name: 'production' } satisfies RouteHandle },
+      { path: '/cyborgs', element: <Cyborgs/>, handle: { name: 'cyborgs' } satisfies RouteHandle },
       { path: '/reference', element: <ReferencePage/> },
       { path: '/drinks', element: <Drinks/>, handle: { name: 'drinks' } satisfies RouteHandle },
       { path: '/medicine', element: <Medicine/>, handle: { name: 'medicine' } satisfies RouteHandle },

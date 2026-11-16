@@ -13,6 +13,7 @@ export interface UrlGenerator {
   readonly medicine: string;
   readonly botany: string;
   readonly production: string;
+  readonly cyborgs: string;
   readonly creatures: string;
   readonly items: string;
   readonly crafting: string;
@@ -59,6 +60,7 @@ export const UrlProvider = ({ children }: UrlProviderProps): ReactElement => {
     medicine: withFork('/medicine', query),
     botany: withFork('/botany', query),
     production: withFork('/production', query),
+    cyborgs: withFork('/cyborgs', query),
     creatures: withFork('/creatures', query),
     items: withFork('/items', query),
     crafting: withFork('/crafting', query),

@@ -2909,3 +2909,164 @@ select {
 .encyclopedia .reference-stats dt { color: var(--fg-subtle); }
 .encyclopedia .reference-stats > div { border-color: var(--bg-level-2); }
 @media (max-width: 600px) { .reference-group-heading { gap: .5rem; } .reference-group-heading h2 { font-size: 1.05rem; } .reference-group-number { display: none; } .reference-group-heading button { font-size: .75rem; } }
+
+/* Drinks: reaction heading with the explorer button, and reaction cards in it. */
+.chemical-reaction-heading { display: flex; align-items: center; gap: 8px; }
+.chemical-reaction-heading > :first-child { flex: 1; min-width: 0; }
+.chemical-reaction-heading > .explore-reaction { flex: none; padding: 4px 6px; }
+.chemical-reaction-heading > .explore-reaction > .icon { display: block; margin: 0; }
+.recipe--reaction .recipe_method > span + span { font-size: .85em; }
+.recipe_also-makes { grid-column: 1 / -1; margin: 0 0 4px; font-size: .85rem; color: var(--fg-subtle); }
+
+/* Cyborg module tree: a pannable canvas with lanes per chassis and tier columns. */
+.department--cyborgs { --department-accent: #7fb3e6; }
+.borg-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.borg-controls > input[type=search] { flex: 1 1 18rem; }
+.borg-controls_count { display: inline-flex; align-items: center; gap: 4px; color: var(--fg-subtle); font-size: .9rem; }
+.borg-controls_count > button { min-width: 32px; }
+
+.borg-tree {
+  --tree-line: var(--explorer-line);
+  --tree-accent: var(--department-accent);
+  --col-default: #8fa3b8;
+  --col-fabricator: #88c999;
+  --col-tier1: #7fb3e6;
+  --col-tier2: #b39ae8;
+  --col-tier3: #e69ad1;
+  --col-emag: #e8836f;
+  --col-none: #c9b36b;
+  position: relative;
+  height: max(480px, calc(100vh - 230px));
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid var(--bg-level-2);
+  border-radius: 8px;
+  background-color: var(--bg-level-0);
+  background-image: radial-gradient(circle, var(--bg-level-2) 1px, transparent 1.5px);
+  background-size: 22px 22px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  overscroll-behavior: contain;
+
+  &:focus-visible { outline: 2px solid var(--focus-color); outline-offset: 2px; }
+  &.is-dragging { cursor: grabbing; }
+  &.is-dragging .borg-node { pointer-events: none; }
+  &.is-animating :is(.borg-tree_content, .borg-tree_header) { transition: transform 260ms ease; }
+}
+.theme-light .borg-tree {
+  --col-default: #4b5d70; --col-fabricator: #26713a; --col-tier1: #1f5f99;
+  --col-tier2: #5b3fa8; --col-tier3: #93306f; --col-emag: #a83a22; --col-none: #7a6420;
+}
+
+.borg-tree_content, .borg-tree_header { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+.borg-tree_header {
+  z-index: 3; height: 52px; pointer-events: none;
+  &.is-floating { filter: drop-shadow(0 3px 6px var(--shadow-color, #0008)); }
+}
+.borg-tree_column-label {
+  position: absolute; top: 8px; box-sizing: border-box; padding: 6px 10px;
+  border-radius: 6px; border-top: 3px solid var(--col); background: var(--bg-level-1);
+  display: flex; flex-direction: column; line-height: 1.25;
+  > strong { color: var(--col); font-size: .9rem; }
+  > span { color: var(--fg-subtle); font-size: .72rem; }
+}
+.borg-tree_band {
+  position: absolute; top: 0; border-radius: 10px; pointer-events: none;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--col) 9%, transparent), color-mix(in srgb, var(--col) 4%, transparent));
+}
+.borg-tree_column-label--default, .borg-tree_band--default, .borg-node--default { --col: var(--col-default); }
+.borg-tree_column-label--fabricator, .borg-tree_band--fabricator, .borg-node--fabricator { --col: var(--col-fabricator); }
+.borg-tree_column-label--tier1, .borg-tree_band--tier1, .borg-node--tier1 { --col: var(--col-tier1); }
+.borg-tree_column-label--tier2, .borg-tree_band--tier2, .borg-node--tier2 { --col: var(--col-tier2); }
+.borg-tree_column-label--tier3, .borg-tree_band--tier3, .borg-node--tier3 { --col: var(--col-tier3); }
+.borg-tree_column-label--emag, .borg-tree_band--emag, .borg-node--emag { --col: var(--col-emag); }
+.borg-tree_column-label--none, .borg-tree_band--none, .borg-node--none { --col: var(--col-none); }
+
+.borg-tree_edges {
+  position: absolute; top: 0; left: 0; overflow: visible; pointer-events: none;
+  path { fill: none; stroke: var(--tree-line); stroke-width: 2; opacity: .55; transition: stroke 150ms, opacity 150ms; }
+  path.is-related { stroke: var(--tree-accent); opacity: 1; stroke-width: 2.5; }
+}
+
+.borg-node {
+  position: absolute; box-sizing: border-box; display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; margin: 0; border: 1px solid var(--bg-level-2); border-radius: 8px;
+  background: var(--bg-level-1); color: var(--fg); text-align: left; font: inherit;
+  box-shadow: 0 1px 3px #0005; transition: opacity 150ms, border-color 150ms, box-shadow 150ms, transform 150ms;
+  &.is-dimmed { opacity: .28; }
+  &.is-selected { border-color: var(--tree-accent); box-shadow: 0 0 0 2px var(--tree-accent), 0 4px 14px #0007; }
+  &.is-related { border-color: var(--tree-accent); }
+}
+button.borg-node, .borg-node_main { cursor: pointer; }
+.borg-node--module {
+  border-left: 4px solid var(--col);
+  &:hover, &:focus-visible { transform: translateY(-1px); box-shadow: 0 4px 12px #0006; border-color: var(--col); border-left-width: 4px; }
+}
+.borg-node--root { border-left: 4px solid var(--tree-accent); background: var(--bg-level-2); }
+.borg-node--branch {
+  padding: 0; overflow: hidden; border-left: 4px solid var(--tree-accent);
+  &.borg-node--generic { border-left-color: var(--col-default); }
+  &.borg-node--special { border-left-color: var(--col-emag); }
+}
+.borg-node_main {
+  flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px; border: 0; border-radius: 0; background: none; color: inherit; font: inherit; text-align: left;
+  &:hover { background: var(--bg-level-2); }
+}
+.borg-node_toggle {
+  flex: none; align-self: stretch; min-width: 36px; padding: 0 8px; border: 0;
+  border-left: 1px solid var(--bg-level-2); border-radius: 0; background: none; color: var(--fg-subtle);
+  font: inherit; font-size: .8rem; cursor: pointer;
+  &:hover { background: var(--bg-level-2); color: var(--fg); }
+}
+.borg-node_icon {
+  flex: none; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px;
+  image-rendering: pixelated;
+  &--large { width: 48px; height: 48px; > * { transform: scale(1.5); } }
+}
+.borg-node_text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.borg-node_name {
+  font-weight: 600; font-size: .86rem; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.borg-node--branch .borg-node_name, .borg-node--root .borg-node_name { font-size: .95rem; overflow-wrap: anywhere; }
+.borg-node_meta { margin-top: 2px; font-size: .72rem; color: var(--fg-subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.borg-node_badge { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 8px; background: color-mix(in srgb, var(--col-emag) 25%, transparent); color: var(--fg); }
+
+.borg-tree_zoom {
+  position: absolute; z-index: 4; left: 12px; bottom: 12px; display: flex; gap: 4px; padding: 4px;
+  border-radius: 8px; background: var(--bg-level-1); box-shadow: 0 2px 8px #0006; cursor: default;
+  > button { min-width: 36px; min-height: 32px; padding: 4px 8px; font-variant-numeric: tabular-nums; }
+}
+
+.borg-tree_details {
+  position: absolute; z-index: 5; top: 12px; right: 12px; bottom: 12px; width: min(380px, calc(100% - 24px));
+  box-sizing: border-box; overflow: auto; padding: 16px; border: 1px solid var(--bg-level-2);
+  border-top: 3px solid var(--tree-accent); border-radius: 8px; background: var(--bg-level-1);
+  box-shadow: 0 6px 24px #0008; cursor: auto; user-select: text; touch-action: auto; overflow-wrap: anywhere;
+  h2 { margin: 0; font-size: 1.15rem; }
+  h3 { margin: 1.1rem 0 .4rem; font-size: .85rem; }
+  p { margin: .5rem 0; line-height: 1.45; }
+  .catalog-card { margin-top: .5rem; padding: .6rem; }
+}
+.borg-tree_details-close {
+  position: sticky; top: 0; float: right; margin: -6px -6px 0 8px; padding: 6px; border-radius: 20px;
+  > .icon { display: block; margin: 0; }
+}
+.borg-details_heading { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; > div { flex: 1; min-width: 0; } }
+.borg-details_tags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.borg-details_tech .catalog-badge { margin-right: 4px; }
+.borg-details_items { margin: .3rem 0; padding-left: 1.1rem; li { margin: .3rem 0; } }
+.borg-chips { list-style: none; margin: .3rem 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.borg-chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px 2px 4px; border-radius: 16px; font-size: .85rem; text-align: left;
+  > .sprite { flex: none; }
+}
+
+@media (max-width: 700px) {
+  .borg-tree { height: 70vh; }
+  .borg-tree_details { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 58%; }
+  .borg-tree_zoom { left: 8px; bottom: 8px; }
+  .borg-tree--details .borg-tree_zoom { display: none; }
+}
