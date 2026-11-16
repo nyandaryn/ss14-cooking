@@ -44,6 +44,7 @@ export type RelevantPrototype =
   | ReagentPrototype
   | StackPrototype
   | ProductionPrototype
+  | ReferencePrototype
   ;
 
 export interface EntityPrototype extends PlainObject {
@@ -221,6 +222,7 @@ export interface MinMax {
 }
 
 const RelevantPrototypeTypes: ReadonlySet<string> = new Set([
+  'borgType', 'weightedRandom', 'construction', 'siliconLaw', 'siliconLawset', 'ionLaw', 'gas', 'gasReaction',
   'constructionGraph',
   'entity',
   'foodSequenceElement',
@@ -263,3 +265,5 @@ export const isSpawnEntityEffect = (
   typeof node.entity === 'string';
 
 export interface ProductionPrototype extends PlainObject { type: "vendingMachineInventory" | "latheRecipe" | "latheRecipePack" | "technology" | "material"; id: string; }
+
+export interface ReferencePrototype extends PlainObject { type: "borgType" | "weightedRandom" | "construction" | "siliconLaw" | "siliconLawset" | "ionLaw" | "gas" | "gasReaction"; id: string; }

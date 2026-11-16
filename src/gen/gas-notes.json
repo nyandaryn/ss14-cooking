@@ -1,0 +1,244 @@
+{
+  "PlasmaFireReaction": {
+    "products": [
+      "Tritium",
+      "CarbonDioxide"
+    ],
+    "ru": "Плазма + кислород → тритий и/или CO₂ + тепло. При O₂/плазма ≤ 32 образуется CO₂; от 32 до 96 доля трития растёт; при ≥ 96 весь газовый продукт — тритий. Расход кислорода зависит от температуры.",
+    "en": "Plasma + oxygen → tritium and/or CO₂ + heat. O₂/plasma ≤ 32 produces CO₂; between 32 and 96 the tritium share increases; at ≥ 96 all gas output is tritium. Oxygen consumption depends on temperature.",
+    "source": "Content.Server/Atmos/Reactions/PlasmaFireReaction.cs",
+    "titleRu": "Горение плазмы",
+    "titleEn": "Plasma combustion"
+  },
+  "TritiumFireReaction": {
+    "products": [
+      "WaterVapor"
+    ],
+    "ru": "Тритий + кислород → водяной пар + тепло. На 1 моль сгоревшего трития расходуется 0,5 моль O₂ и получается 1 моль пара. Скорость зависит от кислорода и энергии смеси.",
+    "en": "Tritium + oxygen → water vapor + heat. Per mole of tritium burned: 0.5 mol O₂ consumed and 1 mol vapor produced. Rate depends on oxygen and mixture energy.",
+    "source": "Content.Server/Atmos/Reactions/TritiumFireReaction.cs",
+    "titleRu": "Горение трития",
+    "titleEn": "Tritium combustion"
+  },
+  "FrezonProductionReaction": {
+    "products": [
+      "Frezon",
+      "Nitrogen"
+    ],
+    "ru": "50 O₂ + 1 тритий; азот — катализатор, не расходуется. Из 51 моль израсходованных газов получается 51 × T/73,15 моль фрезона, остаток превращается в азот. Чем ближе к 73,15 K, тем выше выход.",
+    "en": "50 O₂ + 1 tritium; nitrogen is an unconsumed catalyst. Per 51 mol consumed, output is 51 × T/73.15 mol frezon; the remainder becomes nitrogen. Yield increases toward 73.15 K.",
+    "source": "Content.Server/Atmos/Reactions/FrezonProductionReaction.cs",
+    "titleRu": "Получение фрезона",
+    "titleEn": "Frezon synthesis"
+  },
+  "FrezonCoolantReaction": {
+    "products": [
+      "NitrousOxide"
+    ],
+    "ru": "До 5 азота + 1 фрезона → до 6 N₂O; при нехватке азота расход азота и выход ниже. Реакция охлаждает смесь; скорость зависит от температуры и концентрации фрезона.",
+    "en": "Up to 5 nitrogen + 1 frezon → up to 6 N₂O; nitrogen shortages reduce nitrogen consumption and output. Cools the mixture; rate depends on temperature and frezon concentration.",
+    "source": "Content.Server/Atmos/Reactions/FrezonCoolantReaction.cs",
+    "titleRu": "Охлаждение фрезоном",
+    "titleEn": "Frezon cooling"
+  },
+  "AmmoniaOxygenReaction": {
+    "products": [
+      "NitrousOxide",
+      "WaterVapor"
+    ],
+    "ru": "1 аммиак + 1 O₂ → 0,5 N₂O + 1,5 водяного пара. Скорость зависит от концентрации и температуры.",
+    "en": "1 ammonia + 1 O₂ → 0.5 N₂O + 1.5 water vapor. Rate depends on concentration and temperature.",
+    "source": "Content.Server/Atmos/Reactions/AmmoniaOxygenReaction.cs",
+    "titleRu": "Окисление аммиака",
+    "titleEn": "Ammonia oxidation"
+  },
+  "N2ODecompositionReaction": {
+    "products": [
+      "Nitrogen",
+      "Oxygen"
+    ],
+    "ru": "1 N₂O → 1 азот + 0,5 O₂. Выделяет тепло.",
+    "en": "1 N₂O → 1 nitrogen + 0.5 O₂. Releases heat.",
+    "source": "Content.Server/Atmos/Reactions/N2ODecompositionReaction.cs",
+    "titleRu": "Разложение закиси азота",
+    "titleEn": "Nitrous oxide decomposition"
+  },
+  "BZProductionReaction": {
+    "products": [
+      "BZ",
+      "Oxygen",
+      "Nitrogen"
+    ],
+    "ru": "В обычном режиме 0,8 плазмы + 0,4 N₂O → 1 BZ. Скорость зависит от объёма, давления и соотношения газов. При доле плазмы > 75% растёт побочное разложение N₂O в кислород и азот, выход BZ падает.",
+    "en": "Normally 0.8 plasma + 0.4 N₂O → 1 BZ. Rate depends on volume, pressure and gas ratio. Above 75% plasma, side decomposition of N₂O produces oxygen and nitrogen and reduces BZ yield.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/BZProductionReaction.cs",
+    "titleRu": "Получение BZ",
+    "titleEn": "BZ synthesis"
+  },
+  "PluoxiumProductionReaction": {
+    "products": [
+      "Pluoxium",
+      "Hydrogen"
+    ],
+    "ru": "1 CO₂ + 0,5 O₂ + 0,01 трития → 1 плюоксиума + 0,01 водорода.",
+    "en": "1 CO₂ + 0.5 O₂ + 0.01 tritium → 1 pluoxium + 0.01 hydrogen.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/PluoxiumProductionReaction.cs",
+    "titleRu": "Получение плюоксиума",
+    "titleEn": "Pluoxium synthesis"
+  },
+  "HydrogenFireReaction": {
+    "products": [
+      "WaterVapor"
+    ],
+    "ru": "1 водород + 0,5 O₂ → 1 водяной пар + тепло.",
+    "en": "1 hydrogen + 0.5 O₂ → 1 water vapor + heat.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/HydrogenFireReaction.cs",
+    "titleRu": "Горение водорода",
+    "titleEn": "Hydrogen combustion"
+  },
+  "NitriumProductionReaction": {
+    "products": [
+      "Nitrium"
+    ],
+    "ru": "1 азот + 1 тритий + 0,05 BZ → 1 нитрий. Выход за цикл зависит от температуры.",
+    "en": "1 nitrogen + 1 tritium + 0.05 BZ → 1 nitrium. Per-cycle yield depends on temperature.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/NitriumProductionReaction.cs",
+    "titleRu": "Получение нитрия",
+    "titleEn": "Nitrium synthesis"
+  },
+  "NitriumDecompositionReaction": {
+    "products": [
+      "Hydrogen",
+      "Nitrogen"
+    ],
+    "ru": "1 нитрий → 1 водород + 1 азот; O₂ нужен для запуска, но не расходуется.",
+    "en": "1 nitrium → 1 hydrogen + 1 nitrogen; O₂ is required but not consumed.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/NitriumDecompositionReaction.cs",
+    "titleRu": "Разложение нитрия",
+    "titleEn": "Nitrium decomposition"
+  },
+  "HyperNobliumProductionReaction": {
+    "products": [
+      "HyperNoblium"
+    ],
+    "ru": "10 азота + до 5 трития → 1 гипер-ноблия. BZ снижает расход трития: множитель clamp(тритий/(тритий+BZ), 0,001, 1); BZ не расходуется.",
+    "en": "10 nitrogen + up to 5 tritium → 1 hyper-noblium. BZ reduces tritium consumption by clamp(tritium/(tritium+BZ), 0.001, 1); BZ is not consumed.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/HyperNobliumProductionReaction.cs",
+    "titleRu": "Получение гипер-ноблия",
+    "titleEn": "Hyper-noblium synthesis"
+  },
+  "HalonOxygenAbsorptionReaction": {
+    "products": [
+      "CarbonDioxide"
+    ],
+    "ru": "1 галон + 20 O₂ → 5 CO₂; поглощает кислород и тепло.",
+    "en": "1 halon + 20 O₂ → 5 CO₂; consumes oxygen and heat.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/HalonOxygenAbsorptionReaction.cs",
+    "titleRu": "Поглощение кислорода галоном",
+    "titleEn": "Halon oxygen absorption"
+  },
+  "HealiumProductionReaction": {
+    "products": [
+      "Healium"
+    ],
+    "ru": "2,75 фрезона + 0,25 BZ → 3 хилиума. Выход зависит от температуры.",
+    "en": "2.75 frezon + 0.25 BZ → 3 healium. Yield depends on temperature.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/HealiumProductionReaction.cs",
+    "titleRu": "Получение хилиума",
+    "titleEn": "Healium synthesis"
+  },
+  "ZaukerProductionReaction": {
+    "products": [
+      "Zauker"
+    ],
+    "ru": "0,5 нитрия + 0,01 гипер-ноблия → 0,5 заукера.",
+    "en": "0.5 nitrium + 0.01 hyper-noblium → 0.5 zauker.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/ZaukerProductionReaction.cs",
+    "titleRu": "Получение заукера",
+    "titleEn": "Zauker synthesis"
+  },
+  "ZaukerDecompositionReaction": {
+    "products": [
+      "Oxygen",
+      "Nitrogen"
+    ],
+    "ru": "1 заукер → 0,3 O₂ + 0,7 азота. Азот требуется для запуска.",
+    "en": "1 zauker → 0.3 O₂ + 0.7 nitrogen. Nitrogen is required to start.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/ZaukerDecompositionReaction.cs",
+    "titleRu": "Разложение заукера",
+    "titleEn": "Zauker decomposition"
+  },
+  "ProtoNitrateProductionReaction": {
+    "products": [
+      "ProtoNitrate"
+    ],
+    "ru": "2 водорода + 0,2 плюоксиума → 0,2 прото-нитрата.",
+    "en": "2 hydrogen + 0.2 pluoxium → 0.2 proto-nitrate.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/ProtoNitrateProductionReaction.cs",
+    "titleRu": "Получение прото-нитрата",
+    "titleEn": "Proto-nitrate synthesis"
+  },
+  "ProtoNitrateHydrogenConversionReaction": {
+    "products": [
+      "ProtoNitrate"
+    ],
+    "ru": "1 водород → 0,5 прото-нитрата; уже имеющийся прото-нитрат запускает реакцию.",
+    "en": "1 hydrogen → 0.5 proto-nitrate; existing proto-nitrate starts the reaction.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/ProtoNitrateHydrogenConversionReaction.cs",
+    "titleRu": "Превращение водорода",
+    "titleEn": "Hydrogen conversion"
+  },
+  "ProtoNitrateTritiumConversionReaction": {
+    "products": [
+      "Hydrogen"
+    ],
+    "ru": "1 тритий + 0,01 прото-нитрата → 1 водород.",
+    "en": "1 tritium + 0.01 proto-nitrate → 1 hydrogen.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/ProtoNitrateTritiumDeirradiationReaction.cs",
+    "titleRu": "Очистка трития прото-нитратом",
+    "titleEn": "Tritium deirradiation"
+  },
+  "ProtoNitrateBZaseConversionReaction": {
+    "products": [
+      "Nitrogen",
+      "Helium",
+      "Plasma"
+    ],
+    "ru": "1 BZ → 0,4 азота + 1,6 гелия + 0,8 плазмы; прото-нитрат нужен, но не расходуется.",
+    "en": "1 BZ → 0.4 nitrogen + 1.6 helium + 0.8 plasma; proto-nitrate is required but not consumed.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/ProtoNitrateBZaseActionReaction.cs",
+    "titleRu": "Разложение BZ прото-нитратом",
+    "titleEn": "BZ conversion"
+  },
+  "ElectrovaeProductionReaction": {
+    "products": [
+      "Electrovae",
+      "Oxygen"
+    ],
+    "ru": "2 водяного пара + 11 N₂O → 1 электровея + 1 O₂. Азот — катализатор; CO₂ тормозит реакцию (доля около 5% полностью подавляет её). Эффективность растёт между 373,15 и 1370 K; порог эффективности 0,01 дополнительно ограничивает запуск.",
+    "en": "2 water vapor + 11 N₂O → 1 electrovae + 1 O₂. Nitrogen is a catalyst; CO₂ inhibits the reaction (about 5% suppresses it completely). Efficiency rises between 373.15 and 1370 K; the 0.01 efficiency threshold also limits startup.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/ElectrovaeProductionReaction.cs",
+    "titleRu": "Получение электровея",
+    "titleEn": "Electrovae synthesis"
+  },
+  "ElectrovaeChargeReaction": {
+    "products": [
+      "ChargedElectrovae"
+    ],
+    "ru": "1 электровей → 1 заряженный электровей. Только атмосфера тайла. Несмотря на порог 400 K в прототипе, код требует эффективность ≥ 0,01: фактически около 1518,26 K; максимум эффективности с 1984 K. Поглощает до 5000 Дж/моль.",
+    "en": "1 electrovae → 1 charged electrovae. Tile atmosphere only. Despite the prototype threshold of 400 K, code requires efficiency ≥ 0.01: effectively about 1518.26 K; full efficiency at 1984 K. Absorbs up to 5000 J/mol.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/ElectrovaeChargeReaction.cs",
+    "titleRu": "Зарядка электровея",
+    "titleEn": "Electrovae charging"
+  },
+  "ChargedElectrovaeDischargeReaction": {
+    "products": [
+      "Electrovae"
+    ],
+    "ru": "1 заряженный электровей → 1 электровей. Только атмосфера тайла; требуется O₂, который не расходуется. Вызывает электрическое воздействие.",
+    "en": "1 charged electrovae → 1 electrovae. Tile atmosphere only; requires O₂ without consuming it. Causes electrical exposure.",
+    "source": "Content.Server/_Sunrise/Atmos/Reactions/ChargedElectrovaeDischargeReaction.cs",
+    "titleRu": "Разрядка электровея",
+    "titleEn": "Electrovae discharging"
+  }
+}

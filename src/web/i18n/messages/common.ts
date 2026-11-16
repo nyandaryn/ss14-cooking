@@ -18,6 +18,7 @@ export const en = {
   tabs: {
     allRecipes: 'Cooking',
     medicine: 'Medicine',
+    creatures: 'Creatures', items: 'Items', crafting: 'Crafting', laws: 'Laws', gases: 'Gases',
     botany: 'Botany', production: 'Production',
     drinks: 'Drinks',
     combinations: 'Combinations',
@@ -76,6 +77,7 @@ export const ru: CommonMessages = {
   tabs: {
     allRecipes: 'Кулинария',
     medicine: 'Медицина',
+    creatures: 'Существа', items: 'Предметы', crafting: 'Крафт', laws: 'Законы', gases: 'Газы',
     botany: 'Ботаника', production: 'Производство',
     drinks: 'Напитки',
     combinations: 'Комбинации',

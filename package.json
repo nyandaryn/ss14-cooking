@@ -18,7 +18,8 @@
     "gen:seo": "node scripts/generate-seo.mjs",
     "postgen:recipes": "npm run gen:seo",
     "predeploy": "npm run gen:seo",
-    "test:seo": "node --test scripts/seo.test.mjs"
+    "test:seo": "node --test scripts/seo.test.mjs",
+    "test:encyclopedia": "node --test scripts/encyclopedia.test.mjs"
   },
   "bin": {
     "ss14-cookbook-server": "./bin/server.js"

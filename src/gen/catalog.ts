@@ -1,3 +1,4 @@
+import { buildEncyclopedia } from './encyclopedia';
 import { buildManufacturing, buildVending } from './manufacturing';
 import { findSolution } from './solution-helpers';
 import { DepartmentCatalog, PlantEntry } from '../catalog-types';
@@ -117,7 +118,7 @@ export const buildCatalog = (
       }
     }
   }
-  return { plants, reagents, reactions, extractions, manufacturing: buildManufacturing(raw, entities, translate), vending: buildVending(raw, entities, translate),
+  return { encyclopedia: buildEncyclopedia(raw, entities, translate), plants, reagents, reactions, extractions, manufacturing: buildManufacturing(raw, entities, translate), vending: buildVending(raw, entities, translate),
     drinks: reagents.filter(r => r.group === 'Drinks').map(r => r.id),
     medicine: reagents.filter(r => r.group === 'Medicine').map(r => r.id),
     botanical: reagents.filter(r => r.group === 'Botanical').map(r => r.id),

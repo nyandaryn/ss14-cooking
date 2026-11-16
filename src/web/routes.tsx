@@ -1,3 +1,4 @@
+import { EncyclopediaPage } from './encyclopedia';
 import { Production } from './production';
 import { ReferencePage } from './catalog-links';
 import { Medicine, Botany, Drinks } from './departments';
@@ -15,6 +16,12 @@ export const AppRoutes = [
   {
     element: <Cookbook/>,
     children: [
+      { path: '/creatures', element: <EncyclopediaPage section='creatures'/>, handle: { name: 'creatures' } satisfies RouteHandle },
+      { path: '/items', element: <EncyclopediaPage section='items'/>, handle: { name: 'items' } satisfies RouteHandle },
+      { path: '/crafting', element: <EncyclopediaPage section='crafting'/>, handle: { name: 'crafting' } satisfies RouteHandle },
+      { path: '/laws', element: <EncyclopediaPage section='laws'/>, handle: { name: 'laws' } satisfies RouteHandle },
+      { path: '/gases', element: <EncyclopediaPage section='gases'/>, handle: { name: 'gases' } satisfies RouteHandle },
+
       { path: '/production', element: <Production/>, handle: { name: 'production' } satisfies RouteHandle },
       { path: '/reference', element: <ReferencePage/> },
       { path: '/drinks', element: <Drinks/>, handle: { name: 'drinks' } satisfies RouteHandle },

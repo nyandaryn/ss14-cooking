@@ -34,6 +34,11 @@ const HeaderTabs: readonly HeaderTab[] = [
   { id: 'drinks', target: url => url.drinks, label: t => t.common.tabs.drinks },
   { id: 'medicine', target: url => url.medicine, label: t => t.common.tabs.medicine },
   { id: 'production', target: url => url.production, label: t => t.common.tabs.production },
+  { id: 'creatures', target: url => url.creatures, label: t => t.common.tabs.creatures },
+  { id: 'items', target: url => url.items, label: t => t.common.tabs.items },
+  { id: 'crafting', target: url => url.crafting, label: t => t.common.tabs.crafting },
+  { id: 'laws', target: url => url.laws, label: t => t.common.tabs.laws },
+  { id: 'gases', target: url => url.gases, label: t => t.common.tabs.gases },
   { id: 'botany', target: url => url.botany, label: t => t.common.tabs.botany },
   {
     id: 'food-sequence',

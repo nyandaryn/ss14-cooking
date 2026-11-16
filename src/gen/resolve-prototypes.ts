@@ -136,6 +136,8 @@ export const resolvePrototypes = (
     ...catalog.manufacturing.flatMap(r => r.materials.flatMap(m => m.entityId ? [m.entityId] : [])),
     ...catalog.vending.flatMap(v => v.items.map(i => i.entity.id)),
     ...catalog.extractions.map(e => e.entity.id),
+    ...(catalog.encyclopedia?.creatures.map(e => e.id) ?? []),
+    ...(catalog.encyclopedia?.items.map(e => e.id) ?? []),
     ...catalog.plants.flatMap(p => [...p.products.map(v => v.id), ...(p.seed ? [p.seed.id] : [])]),
   ]);
   for (const id of iconIds) {
@@ -203,12 +205,15 @@ const formatMessage = (
   if (!id) {
     return null;
   }
-  const message = bundle.getMessage(id);
-  if (!message?.value) {
+  const [messageId, variant = 'template'] = id.split('::');
+  const [key, attribute] = messageId.split('.');
+  const message = bundle.getMessage(key);
+  const pattern = attribute ? message?.attributes[attribute] : message?.value;
+  if (!pattern) {
     return null;
   }
   const errors: Error[] = [];
-  const text = bundle.formatPattern(message.value, null, errors).trim();
+  const text = bundle.formatPattern(pattern, { ion: variant }, errors).trim();
   if (errors.length > 0 || text === '') {
     return null;
   }
@@ -292,6 +297,11 @@ const createFluentBundle = (
 
   const bundle = new FluentBundle(gameLocale, {
     useIsolating: false,
+    functions: Object.fromEntries(['NUMBER-BASE', 'NUMBER-MOD', 'ADJECTIVE', 'SUBJECT', 'WHO', 'MUST', 'THING', 'JOB', 'WHO-GENERAL', 'PLURAL', 'REQUIRE', 'SEVERITY', 'ALLERGY', 'FEELING', 'CONCEPT', 'FOOD', 'DRINK', 'CHANGE', 'WHO-RANDOM', 'AREA', 'PART', 'OBJECT', 'HARM-PROTECT', 'VERB'].map(key => [`ION-${key}`, (args: readonly unknown[]) => {
+      if (key === 'PART' || key === 'PLURAL') return String(args[0]).includes(key.toLowerCase()) ? 'true' : 'false';
+      const labels: Record<string, string> = { 'NUMBER-BASE': 'число', 'NUMBER-MOD': 'множитель', ADJECTIVE: 'прилагательное', SUBJECT: 'объект', WHO: 'кто', MUST: 'действие', THING: 'предмет или понятие', JOB: 'должность', 'WHO-GENERAL': 'кто', REQUIRE: 'потребность', SEVERITY: 'степень', ALLERGY: 'аллерген', FEELING: 'отношение', CONCEPT: 'понятие', FOOD: 'еда', DRINK: 'напиток', CHANGE: 'новая должность', 'WHO-RANDOM': 'случайная группа', AREA: 'место', OBJECT: 'предмет', 'HARM-PROTECT': 'цель', VERB: 'действие' };
+      return `[${gameLocale.startsWith('ru') ? labels[key] ?? key.toLowerCase() : key.toLowerCase()}]`;
+    }])),
   });
 
   for (const path of ftlPaths) {

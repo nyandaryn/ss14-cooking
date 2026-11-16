@@ -251,3 +251,15 @@ Cooking/assembler recipes have stable `?recipe=...` links. Reverse references
 include chemical reactions, secondary construction outputs and food combinations;
 expandable source/use lists are mounted only when opened. Headers and catalog
 cards share the same responsive department styles.
+
+## Существа, предметы, крафт, законы и газы
+
+Новые разделы: `/creatures`, `/items`, `/crafting`, `/laws`, `/gases`. Поиск, фильтры и выбранная запись (`?id=…`) сохраняются в URL вместе со сборкой. Данные находятся в `catalog.encyclopedia`; HTML для поисковиков генерируется вместе с остальными разделами.
+
+- Существа: все неабстрактные прототипы с MobState/MobThresholds, включая событийные и административные варианты. Предметы: все неабстрактные Item, с несколькими категориями по компонентам. Описание берётся из Fluent `.desc` с наследованием и английским fallback; отсутствие описания явно показано.
+- Крафт: видимые `construction`, наследование и `CreateVariants`, кратчайший путь по `constructionGraph`, порядок шагов, материалы, инструменты и время. Каталог не моделирует размещение объекта в конкретной комнате и альтернативные пути перестройки.
+- Законы: все `siliconLawset`, исходные SiliconLawProvider, пометки набора из IonStormLawsets и все `ionLaw`. Это шаблоны случайных законов, а не конечный список всех сочетаний слов. Обычный урон корпусу не приравнивается к ионному сбою.
+- Газы: все `gas` и активные `gasReaction`. YAML задаёт пороги запуска, а расход/выход описан по C# в `src/gen/gas-notes.json`; ссылки ведут на коммит выбранной сборки. При обновлении игровых исходников нужно повторно сверять эти описания с C# (включая константы и ограничения), а не только YAML. Исходная проверка: Lust `ea6d67f3a03b8483c88e2c77acdeadee9dca1b7e`, WizDen `feeea36c265247d536b9eba90f005b42083253fd`. Газы без реакции получения также присутствуют: их источники могут быть картой, баллонами и другими механиками.
+- Отсутствующие в игре текстуры дают пустой спрайт и предупреждение генератора; существующие изображения сохраняют атрибуцию.
+
+Проверка: `npm run build && npm run gen:recipes && npm run test:encyclopedia`, затем существующие тесты каталога/производства/SEO. Проверка кода проекта: `npx tsc --noEmit --skipLibCheck` (у установленного Jimp есть внешние ошибки деклараций без `skipLibCheck`).

@@ -1,9 +1,11 @@
+import { expandPrototypeVariants } from './variants';
 import { globSync } from 'glob';
 import { resolve } from 'node:path';
 import { CollectionTag, Scalar, YAMLMap, parse } from 'yaml';
 import { readFileTextWithoutTheStupidBOM } from './helpers';
 import {
   ProductionPrototype,
+  ReferencePrototype,
   ConstructionGraphId,
   ConstructionGraphMap,
   ConstructionGraphPrototype,
@@ -29,6 +31,7 @@ import {
 } from './prototypes';
 
 export interface RawGameData {
+  readonly reference: ReferencePrototype[];
   readonly production: ProductionPrototype[];
   readonly entities: EntityMap;
   readonly reagents: ReagentMap;
@@ -76,6 +79,7 @@ export const findResourceFiles = (prototypeDir: string): string[] =>
     .map(filePath => resolve(prototypeDir, filePath))
 
 export const readRawGameData = (yamlPaths: string[]): RawGameData => {
+  const reference: ReferencePrototype[] = [];
   const production: ProductionPrototype[] = [];
   const entities = new Map<EntityId, EntityPrototype>();
   const reagents = new Map<ReagentId, ReagentPrototype>();
@@ -106,11 +110,13 @@ export const readRawGameData = (yamlPaths: string[]): RawGameData => {
       continue;
     }
 
-    for (const node of doc) {
+    for (const node of doc.flatMap(expandPrototypeVariants)) {
       if (!isRelevantPrototype(node)) {
         continue;
       }
       switch (node.type) {
+        case 'borgType': case 'weightedRandom': case 'construction': case 'siliconLaw': case 'siliconLawset': case 'ionLaw': case 'gas': case 'gasReaction':
+          reference.push(node); break;
         case 'vendingMachineInventory': case 'latheRecipe': case 'latheRecipePack': case 'technology': case 'material':
           production.push(node); break;
         case 'entity':
@@ -141,6 +147,7 @@ export const readRawGameData = (yamlPaths: string[]): RawGameData => {
     }
   }
   return {
+    reference,
     production,
     entities,
     reagents,

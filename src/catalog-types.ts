@@ -1,3 +1,4 @@
+import { Encyclopedia } from './encyclopedia-types';
 /** Localized reference, also used for prototypes outside the cooking sprite sheet. */
 export interface CatalogRef { id: string; name: string }
 export interface ReagentMetabolism { stage: string; rate: number; effects: Record<string, unknown>[] }
@@ -31,6 +32,7 @@ export interface ManufacturingRecipe {
 }
 export interface VendorEntry { machine: CatalogRef; items: { entity: CatalogRef; amount: number; access: string }[] }
 export interface DepartmentCatalog {
+  encyclopedia?: Encyclopedia;
   vending: VendorEntry[];
   manufacturing: ManufacturingRecipe[];
   extractions: { entity: CatalogRef; reagent: CatalogRef; method: 'grind' | 'juice'; amount: number }[];

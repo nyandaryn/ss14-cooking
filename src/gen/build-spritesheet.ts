@@ -343,6 +343,11 @@ class SpriteCache {
   ): Promise<JimpInstance> {
     const key = joinPath(path, `${state}.png`);
 
+    // Missing upstream placeholder textures have no artwork to attribute.
+    if (!existsSync(resolve(this.dir, key))) {
+      console.warn(`Missing sprite: ${key}`);
+      return new Jimp({ width: SpriteSize, height: SpriteSize });
+    }
     const attribution = this.loadAttributions(path);
     attribution.sprites.set(point.toString(), point);
 
